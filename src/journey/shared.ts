@@ -23,6 +23,10 @@ export function normalizeName(name: string): string {
 /** Creator values that mean "nobody known" and therefore are no real overlap. */
 const PLACEHOLDER_NAMES = new Set(["unbekannt", "unknown", "anonym", "anonymous", "o.a.", "ohne angabe"]);
 
+export function isPlaceholderName(normalized: string): boolean {
+  return PLACEHOLDER_NAMES.has(normalized);
+}
+
 export function yearOf(seconds: number): number {
   return Math.round(1970 + seconds / SECONDS_PER_YEAR);
 }

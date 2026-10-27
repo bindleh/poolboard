@@ -1,4 +1,5 @@
 import type { Item, Link, Suggestion } from "../types";
+import { isPlaceholderName, normalizeName } from "./shared";
 
 export const MAX_ITEMS = 20;
 export const SUGGESTIONS_PER_MODE = 10;
@@ -53,17 +54,24 @@ export function journeyReducer(state: JourneyState, action: JourneyAction): Jour
   }
 }
 
+function knownCreator(item: Item): string | undefined {
+  const name = item.creators[0] ? normalizeName(item.creators[0]) : "";
+  return name && !isPlaceholderName(name) ? name : undefined;
+}
+
 export interface DiversityCaps {
   perTitle: number;
   perInstitution: number;
+  perCreator: number;
 }
 
-/** Museums digitise whole series with identical titles; without caps they fill every slot. */
-export const DEFAULT_CAPS: DiversityCaps = { perTitle: 1, perInstitution: 3 };
+/** Collections are full of series and single-creator batches; caps keep the suggestions varied. */
+export const DEFAULT_CAPS: DiversityCaps = { perTitle: 1, perInstitution: 2, perCreator: 1 };
 
 /**
  * Drops seen items and duplicates, then spreads the result: at most `perTitle` items with
- * the same title and `perInstitution` from the same institution. If that leaves fewer than
+ * the same title, `perCreator` by the same creator and `perInstitution` from the same
+ * institution. If that leaves fewer than
  * `limit`, the closest skipped items fill the remaining slots.
  */
 export function pickSuggestions(
@@ -81,6 +89,7 @@ export function pickSuggestions(
 
   const titles = new Map<string, number>();
   const institutions = new Map<string, number>();
+  const creators = new Map<string, number>();
   const picked = new Set<Suggestion>();
   for (const c of usable) {
     if (picked.size === limit) break;
@@ -88,8 +97,11 @@ export function pickSuggestions(
     const inst = c.item.institution;
     if ((titles.get(title) ?? 0) >= caps.perTitle) continue;
     if (inst && (institutions.get(inst) ?? 0) >= caps.perInstitution) continue;
+    const creator = knownCreator(c.item);
+    if (creator && (creators.get(creator) ?? 0) >= caps.perCreator) continue;
     titles.set(title, (titles.get(title) ?? 0) + 1);
     if (inst) institutions.set(inst, (institutions.get(inst) ?? 0) + 1);
+    if (creator) creators.set(creator, (creators.get(creator) ?? 0) + 1);
     picked.add(c);
   }
   for (const c of usable) {

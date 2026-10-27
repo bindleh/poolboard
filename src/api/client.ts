@@ -70,16 +70,29 @@ export async function fetchRandomItem(): Promise<Item> {
   return toItem(hit.document);
 }
 
+export interface SimilarOptions {
+  /** Leave out this institution so suggestions come from other collections. */
+  excludeInstitution?: string;
+  perPage?: number;
+}
+
 /**
- * Similar items for one similarity mode. Requests more than needed so that
- * already seen items can be dropped afterwards.
+ * Similar items for one similarity mode. Requests many candidates so that seen
+ * items can be dropped and the rest spread across institutions afterwards.
  */
-export async function fetchSimilar(id: string, on: LinkKind, perPage = 150): Promise<Suggestion[]> {
+export async function fetchSimilar(
+  id: string,
+  on: LinkKind,
+  { excludeInstitution, perPage = 200 }: SimilarOptions = {},
+): Promise<Suggestion[]> {
+  const exclude = excludeInstitution
+    ? ` && dataProvider:!=\`${excludeInstitution.replace(/`/g, "")}\``
+    : "";
   const data = await get("/v2/similar", {
     id,
     on,
     per_page: perPage,
-    filter_by: IMAGE_FILTER,
+    filter_by: IMAGE_FILTER + exclude,
   });
   return (data.hits ?? []).map((h: RawDoc) => ({
     item: toItem(h.document),

@@ -66,7 +66,11 @@ export function useJourney() {
     setRows(LOADING);
     const hide = new Set(seenRef.current);
 
-    Promise.allSettled([fetchSimilar(currentId, "metadata"), fetchSimilar(currentId, "image")]).then(
+    const options = { excludeInstitution: current?.institution };
+    Promise.allSettled([
+      fetchSimilar(currentId, "metadata", options),
+      fetchSimilar(currentId, "image", options),
+    ]).then(
       ([m, i]) => {
         if (cancelled) return;
         const next: Rows = { metadata: { status: "loading" }, image: { status: "loading" } };

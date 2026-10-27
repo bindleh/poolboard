@@ -68,12 +68,13 @@ describe("pickSuggestions", () => {
 });
 
 describe("pickSuggestions diversity", () => {
-  const sug = (id: string, title: string, institution: string): Suggestion => ({
-    item: item(id, { title, institution }),
+  const sug = (id: string, title: string, institution: string, creator?: string): Suggestion => ({
+    item: item(id, { title, institution, creators: creator ? [creator] : [] }),
     distance: 0.1,
   });
+  const caps = { perTitle: 1, perInstitution: 3, perCreator: 99 };
 
-  it("allows one item per title and three per institution", () => {
+  it("allows one item per title and the configured number per institution", () => {
     const out = pickSuggestions(
       [
         sug("1", "Serie", "A"),
@@ -86,12 +87,28 @@ describe("pickSuggestions diversity", () => {
       ],
       new Set(),
       4,
+      caps,
     );
     expect(out.map((s) => s.item.id)).toEqual(["1", "4", "5", "7"]);
   });
 
+  it("allows one item per known creator but ignores 'unbekannt'", () => {
+    const out = pickSuggestions(
+      [
+        sug("1", "a", "A", "Klimt, Gustav"),
+        sug("2", "b", "B", "Gustav Klimt"),
+        sug("3", "c", "C", "unbekannt"),
+        sug("4", "d", "D", "unbekannt"),
+      ],
+      new Set(),
+      3,
+      { perTitle: 1, perInstitution: 9, perCreator: 1 },
+    );
+    expect(out.map((s) => s.item.id)).toEqual(["1", "3", "4"]);
+  });
+
   it("fills up with the closest skipped items when variety runs out", () => {
-    const out = pickSuggestions([sug("1", "Serie", "A"), sug("2", "Serie", "A"), sug("3", "Serie", "A")], new Set(), 3);
+    const out = pickSuggestions([sug("1", "Serie", "A"), sug("2", "Serie", "A"), sug("3", "Serie", "A")], new Set(), 3, caps);
     expect(out.map((s) => s.item.id)).toEqual(["1", "2", "3"]);
   });
 });
