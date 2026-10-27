@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kulturpool Entdecker</title>
+<style>
+:root{--bg:#faf8f5;--fg:#1c1b1a;--mut:#77736c;--card:#fff;--acc:#c8102e;--bd:#e6e1d9}
+@media(prefers-color-scheme:dark){:root{--bg:#161514;--fg:#f1eee9;--mut:#a39e95;--card:#211f1d;--bd:#34312d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;gap:12px;align-items:center;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--bd)}
+header h1{font:600 18px Georgia,serif;margin:0;flex:1}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:7px 14px;border-radius:999px}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+button:disabled{opacity:.4;cursor:default}
+main{padding:20px;max-width:1400px;margin:auto}
+.intro{text-align:center;margin:10px 0 20px}
+.intro h2{font:600 26px Georgia,serif;margin:0 0 6px}
+.intro p{color:var(--mut);margin:0}
+.grid{columns:5 220px;column-gap:14px}
+.card{break-inside:avoid;margin:0 0 14px;position:relative;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--bd);cursor:pointer}
+.card img{display:block;width:100%;height:auto;background:var(--bd)}
+.card .cap{padding:8px 10px;font-size:13px}
+.card .cap small{display:block;color:var(--mut)}
+.heart{position:absolute;top:8px;right:8px;width:34px;height:34px;padding:0;border-radius:50%;background:#fffd;color:#333;font-size:17px}
+.heart.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.card.sel{outline:4px solid var(--acc)}
+.bar{text-align:center;margin:20px 0}
+.msg{text-align:center;color:var(--mut);padding:30px}
+#modal{position:fixed;inset:0;background:#000a;display:none;z-index:10;overflow:auto;padding:20px}
+#modal.open{display:block}
+.sheet{max-width:1100px;margin:auto;background:var(--bg);border-radius:16px;padding:20px}
+.top{display:flex;gap:22px;flex-wrap:wrap}
+.top .im{flex:1 1 380px;text-align:center}
+.top .im img{max-width:100%;max-height:68vh;border-radius:10px}
+.top .meta{flex:1 1 260px}
+.meta h3{font:600 22px Georgia,serif;margin:0 0 8px}
+.meta p{margin:4px 0;color:var(--mut)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.sim{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:8px}
+.sim .card{margin:0}
+.sim img{aspect-ratio:1;object-fit:cover}
+.chip{position:absolute;left:8px;bottom:8px;font-size:11px;background:#000b;color:#fff;padding:2px 8px;border-radius:99px}
+h4{margin:22px 0 4px;font-size:16px}
+.pin{position:absolute;top:8px;left:8px;padding:5px 12px;background:var(--acc);border-color:var(--acc);color:#fff;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.tile{cursor:pointer;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:10px}
+.cover{display:grid;grid-template-columns:1fr 1fr;gap:3px;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bd)}
+.cover img{width:100%;height:100%;object-fit:cover}
+.tile b{display:block;margin-top:8px}.tile small{color:var(--mut)}
+#picker{position:fixed;inset:0;background:#000a;display:none;z-index:20;align-items:center;justify-content:center}
+#picker.open{display:flex}
+.pbox{background:var(--bg);border-radius:16px;padding:20px;width:min(380px,92vw);max-height:80vh;overflow:auto}
+.pbox label{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer}
+.pbox label small{color:var(--mut)}
+.pbox input[type=text]{flex:1;min-width:0;padding:8px 14px;border:1px solid var(--bd);border-radius:999px;background:var(--card);color:var(--fg);font:inherit}
+</style>
+</head>
+<body>
+<header>
+  <h1>Kulturpool Entdecker</h1>
+  <button id="navDiscover">Entdecken</button><button id="navBoards">Boards</button>
+  <button id="feedBtn" style="display:none">Neu mischen</button>
+  <button id="resetBtn" style="display:none">Neu starten</button>
+</header>
+<main id="main"></main>
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="picker"><div class="pbox" id="pbox"></div></div>
+
+<script>
+const API = '/api/kp';   // läuft über das eigene Backend (Proxy)
+const FIELDS = 'uuid,title,previewImage,dataProvider,date,creator,url,isShownBy,imageAspectRatio';
+// Nur Bilder; ausgeschlossen: Objekte, die auch TEXT (Scans von Briefen, Büchern …) enthalten,
+// sowie typische Text-Objekttypen. Fällt auf den Basisfilter zurück, falls die API den langen ablehnt.
+const BASIC = 'edmType:=IMAGE && edmType:!=TEXT && imageCount:>0';
+const NOT_TEXT = BASIC + ' && edmType:!=[VIDEO,SOUND,3D] && dcType:!=[Handschrift,Manuskript,Brief,Buch,Zeitung,Zeitschrift,Urkunde,Akte,Text,Typoskript,Notenblatt,Druckschrift,Dokument,Karteikarte,Codex]';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+
+let liked = [], boards = [], pool = [], shown = 0, stack = [], picks = new Map(), saveTimer;
+// Likes + Boards werden serverseitig gespeichert (entprellt)
+function persist() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => fetch('/api/state', {method: 'PUT', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({liked, boards})}).catch(() => {}), 400);
+}
+const save = persist;
+const isLiked = id => liked.some(l => l.uuid === id);
+
+async function api(path, params) {
+  let r = await fetch(API + path + '?' + new URLSearchParams(params));
+  if (r.status === 400 && params.filter_by === NOT_TEXT)
+    r = await fetch(API + path + '?' + new URLSearchParams({...params, filter_by: BASIC}));
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+const docs = j => j.hits.map(h => h.document).filter(d => d.previewImage);
+async function similar(id, on, n) {
+  try { return docs(await api('/similar', {id, on, per_page: n, filter_by: NOT_TEXT})); } catch { return []; }
+}
+function fail(e) {
+  $('#main').innerHTML = '<div class="msg">Die Kulturpool-API konnte nicht geladen werden (' + esc(e.message) +
+    ').<br>Das Backend konnte die Kulturpool-API nicht erreichen – bitte später erneut versuchen.</div>';
+}
+
+/* ---------- Karten ---------- */
+function card(d, opts = {}) {
+  const el = document.createElement('div');
+  el.className = 'card' + (opts.sel ? ' sel' : '');
+  const ratio = d.imageAspectRatio ? `style="aspect-ratio:${d.imageAspectRatio}"` : '';
+  el.innerHTML = `<img ${ratio} loading="lazy" src="${esc(d.previewImage)}" alt="${esc(d.title)}">` +
+    (opts.chip ? `<span class="chip">${opts.chip}</span>` : '') +
+    (opts.heart ? `<button class="heart ${isLiked(d.uuid) ? 'on' : ''}" title="Gefällt mir">♥</button>` : '') +
+    (opts.pin ? '<button class="pin">＋ Board</button>' : '') +
+    (opts.remove ? '<button class="heart rm" title="Vom Board entfernen">✕</button>' : '') +
+    (opts.cap ? `<div class="cap">${esc(d.title)}<small>${esc(d.dataProvider)}</small></div>` : '');
+  el.onclick = e => {
+    if (e.target.classList.contains('rm')) { opts.remove(); return; }
+    if (e.target.classList.contains('pin')) { openPicker(d); return; }
+    if (e.target.classList.contains('heart')) {
+      toggleLike(d); e.target.classList.toggle('on', isLiked(d.uuid)); return;
+    }
+    opts.onclick ? opts.onclick(el) : openModal(d);
+  };
+  return el;
+}
+function toggleLike(d) {
+  liked = isLiked(d.uuid) ? liked.filter(l => l.uuid !== d.uuid) : [...liked, slim(d)];
+  save(); $('#resetBtn').style.display = liked.length ? '' : 'none';
+}
+
+/* ---------- Onboarding ---------- */
+async function onboarding() {
+  $('#feedBtn').style.display = 'none';
+  $('#main').innerHTML = '<div class="msg">Lade Bilder …</div>';
+  picks = new Map();
+  try {
+    const j = await api('/search', {q: '*', sort_by: '_rand()', use_cache: 'false', per_page: 60,
+      filter_by: NOT_TEXT, include_fields: FIELDS});
+    const perProv = {}, out = [];
+    for (const d of docs(j)) {            // höchstens 3 Bilder je Institution → mehr Vielfalt
+      perProv[d.dataProvider] = (perProv[d.dataProvider] || 0) + 1;
+      if (perProv[d.dataProvider] <= 3 && out.length < 15) out.push(d);
+    }
+    $('#main').innerHTML = `<div class="intro"><h2>Was gefällt dir?</h2>
+      <p>Wähle mindestens drei Bilder, um deine Empfehlungen zu starten.</p></div>
+      <div class="grid" id="g"></div>
+      <div class="bar"><button id="more">Andere Bilder</button>
+      <button class="pri" id="go" disabled>Empfehlungen starten</button></div>`;
+    const upd = () => { $('#go').disabled = picks.size < 3; $('#go').textContent = `Empfehlungen starten (${picks.size})`; };
+    out.forEach(d => $('#g').append(card(d, {cap: true, onclick: el => {
+      picks.has(d.uuid) ? picks.delete(d.uuid) : picks.set(d.uuid, d);
+      el.classList.toggle('sel', picks.has(d.uuid)); upd();
+    }})));
+    $('#more').onclick = onboarding;
+    $('#go').onclick = () => { picks.forEach(d => { if (!isLiked(d.uuid)) liked.push(d); }); save(); feed(); };
+    upd();
+  } catch (e) { fail(e); }
+}
+
+/* ---------- Feed ---------- */
+async function feed(src = liked) {
+  $('#feedBtn').style.display = ''; $('#resetBtn').style.display = '';
+  $('#main').innerHTML = '<div class="msg">Stelle deine Empfehlungen zusammen …</div>';
+  const seeds = shuffle(src).slice(0, 5), score = new Map();
+  await Promise.all(seeds.flatMap(s => ['image', 'metadata'].map(async on => {
+    (await similar(s.uuid, on, 30)).forEach((d, i) => {
+      const e = score.get(d.uuid) || {d, s: 0};
+      e.s += 1 / (i + 5);                  // Treffer bei mehreren Seeds/Vektoren steigen auf
+      score.set(d.uuid, e);
+    });
+  })));
+  liked.forEach(l => score.delete(l.uuid));
+  pool = [...score.values()].map(e => ({d: e.d, s: e.s * (0.8 + Math.random() * 0.4)}))
+    .sort((a, b) => b.s - a.s).map(e => e.d);
+  if (!pool.length) return fail(new Error('keine Treffer'));
+  shown = 0;
+  $('#main').innerHTML = '<div class="intro"><h2>Für dich</h2><p>Basierend auf ' + src.length +
+    ' Bildern – Herz oder Board-Speichern verfeinert die Vorschläge.</p></div>' +
+    '<div class="grid" id="g"></div><div class="bar"><button id="more" class="pri">Mehr laden</button></div>';
+  $('#more').onclick = more; more();
+}
+function more() {
+  pool.slice(shown, shown + 30).forEach(d => $('#g').append(card(d, {heart: true, pin: true, cap: true})));
+  shown += 30; if (shown >= pool.length) $('#more').style.display = 'none';
+}
+
+/* ---------- Detailansicht + 6 ähnliche Bilder ---------- */
+async function openModal(d, push = true) {
+  if (push) stack.push(d);
+  const m = $('#modal'); m.classList.add('open'); document.body.style.overflow = 'hidden';
+  const creator = Array.isArray(d.creator) ? d.creator.join(', ') : d.creator;
+  const date = Array.isArray(d.date) ? d.date[0] : d.date;
+  $('#sheet').innerHTML = `<div class="row"><button id="back">${stack.length > 1 ? '← Zurück' : '✕ Schließen'}</button>
+      ${stack.length > 1 ? '<button id="close">✕ Schließen</button>' : ''}</div>
+    <div class="top"><div class="im"><img src="${esc(d.previewImage)}" alt="${esc(d.title)}"></div>
+    <div class="meta"><h3>${esc(d.title)}</h3>
+      <p>${esc(d.dataProvider)}</p>${creator ? `<p>${esc(creator)}</p>` : ''}${date ? `<p>${esc(date)}</p>` : ''}
+      <div class="row"><button id="pinb" class="pri">＋ Board</button><button id="like" class="${isLiked(d.uuid) ? 'pri' : ''}">${isLiked(d.uuid) ? '♥ Gemerkt' : '♡ Merken'}</button>
+      ${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener"><button>Auf kulturpool.at</button></a>` : ''}
+      ${d.isShownBy ? `<a href="${esc(d.isShownBy)}" target="_blank" rel="noopener"><button>Original</button></a>` : ''}</div></div></div>
+    <h4>Ähnliche Objekte</h4><div class="sim" id="sim"><div class="msg">Suche ähnliche Bilder …</div></div>`;
+  $('#pinb').onclick = () => openPicker(d); $('#back').onclick = back; if ($('#close')) $('#close').onclick = closeModal;
+  $('#like').onclick = e => { toggleLike(d); e.target.className = isLiked(d.uuid) ? 'pri' : '';
+    e.target.textContent = isLiked(d.uuid) ? '♥ Gemerkt' : '♡ Merken'; };
+  m.scrollTop = 0;
+
+  const [img, meta] = await Promise.all([similar(d.uuid, 'image', 12), similar(d.uuid, 'metadata', 12)]);
+  if (stack[stack.length - 1] !== d) return;            // Nutzer ist schon weitergeklickt
+  const seen = new Set([d.uuid]), out = [];
+  for (let i = 0; out.length < 6 && i < 12; i++) {       // abwechselnd visuell / inhaltlich
+    for (const [src, tag] of [[img, 'visuell'], [meta, 'Metadaten']]) {
+      const x = src[i];
+      if (x && !seen.has(x.uuid) && out.length < 6) { seen.add(x.uuid); out.push({x, tag}); }
+    }
+  }
+  const sim = $('#sim'); sim.innerHTML = '';
+  if (!out.length) sim.innerHTML = '<div class="msg">Keine ähnlichen Objekte gefunden.</div>';
+  out.forEach(({x, tag}) => sim.append(card(x, {chip: tag, onclick: () => openModal(x)})));
+}
+function back() { stack.pop(); stack.length ? openModal(stack[stack.length - 1], false) : closeModal(); }
+function closeModal() { stack = []; $('#modal').classList.remove('open'); document.body.style.overflow = ''; }
+$('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+addEventListener('keydown', e => { if (e.key === 'Escape') { $('#picker').classList.contains('open') ? closePicker() : closeModal(); } });
+
+/* ---------- Boards ---------- */
+const saveB = persist;
+const slim = d => ({uuid: d.uuid, title: d.title, previewImage: d.previewImage, dataProvider: d.dataProvider,
+  date: d.date, creator: d.creator, url: d.url, isShownBy: d.isShownBy, imageAspectRatio: d.imageAspectRatio});
+const addLiked = d => { if (!isLiked(d.uuid)) { liked.push(slim(d)); save(); } };
+const newBoard = name => { const b = {id: Date.now().toString(36), name, items: []}; boards.push(b); saveB(); return b; };
+const closePicker = () => $('#picker').classList.remove('open');
+
+function openPicker(d) {
+  $('#picker').classList.add('open');
+  const draw = () => {
+    $('#pbox').innerHTML = '<h4 style="margin-top:0">Auf Board speichern</h4>' +
+      (boards.map(b => `<label><input type="checkbox" data-id="${b.id}" ${b.items.some(i => i.uuid === d.uuid) ? 'checked' : ''}> ${esc(b.name)} <small>(${b.items.length})</small></label>`).join('')
+        || '<p class="msg">Noch kein Board.</p>') +
+      '<div class="row"><input type="text" id="nb" placeholder="Neues Board …"><button class="pri" id="nbb">Erstellen</button></div><button id="pdone">Fertig</button>';
+    document.querySelectorAll('#pbox input[type=checkbox]').forEach(c => c.onchange = () => {
+      const b = boards.find(x => x.id === c.dataset.id);
+      if (c.checked) { b.items.push(slim(d)); addLiked(d); } else b.items = b.items.filter(i => i.uuid !== d.uuid);
+      saveB(); draw();
+    });
+    const make = () => { const n = $('#nb').value.trim(); if (!n) return; newBoard(n).items.push(slim(d)); addLiked(d); saveB(); draw(); };
+    $('#nbb').onclick = make; $('#nb').onkeydown = e => { if (e.key === 'Enter') make(); };
+    $('#pdone').onclick = closePicker;
+  };
+  draw();
+}
+
+function showBoards() {
+  $('#feedBtn').style.display = 'none';
+  $('#main').innerHTML = '<div class="intro"><h2>Deine Boards</h2><p>Sammle Bilder zu Themen – gespeicherte Bilder verfeinern auch deine Empfehlungen.</p></div>' +
+    '<div class="bar"><button class="pri" id="nbd">＋ Neues Board</button></div><div class="tiles" id="t"></div>';
+  $('#nbd').onclick = () => { const n = (prompt('Name des Boards') || '').trim(); if (n) { newBoard(n); showBoards(); } };
+  if (!boards.length) $('#t').innerHTML = '<div class="msg">Noch keine Boards. Speichere Bilder über „＋ Board“.</div>';
+  boards.forEach(b => {
+    const el = document.createElement('div'); el.className = 'tile';
+    el.innerHTML = '<div class="cover">' + b.items.slice(0, 4).map(i => `<img src="${esc(i.previewImage)}" alt="">`).join('') +
+      `</div><b>${esc(b.name)}</b><small>${b.items.length} Bilder</small>`;
+    el.onclick = () => showBoard(b.id); $('#t').append(el);
+  });
+}
+function showBoard(id) {
+  const b = boards.find(x => x.id === id); if (!b) return showBoards();
+  $('#main').innerHTML = `<div class="intro"><h2>${esc(b.name)}</h2><p>${b.items.length} Bilder</p></div>
+    <div class="bar"><button id="bb">← Alle Boards</button> <button id="bm" class="pri">Mehr wie dieses Board</button>
+    <button id="br">Umbenennen</button> <button id="bd">Löschen</button></div><div class="grid" id="g"></div>`;
+  $('#bb').onclick = showBoards;
+  $('#bm').onclick = () => b.items.length ? feed(b.items) : alert('Das Board ist noch leer.');
+  $('#br').onclick = () => { const n = (prompt('Neuer Name', b.name) || '').trim(); if (n) { b.name = n; saveB(); showBoard(id); } };
+  $('#bd').onclick = () => { if (confirm('Board „' + b.name + '“ löschen?')) { boards = boards.filter(x => x.id !== id); saveB(); showBoards(); } };
+  if (!b.items.length) $('#g').innerHTML = '<div class="msg">Noch leer.</div>';
+  b.items.forEach(d => $('#g').append(card(d, {cap: true, pin: true,
+    remove: () => { b.items = b.items.filter(i => i.uuid !== d.uuid); saveB(); showBoard(id); }})));
+}
+
+$('#picker').onclick = e => { if (e.target.id === 'picker') closePicker(); };
+$('#navBoards').onclick = () => { closeModal(); showBoards(); };
+$('#navDiscover').onclick = () => { closeModal(); liked.length >= 3 ? feed() : onboarding(); };
+$('#feedBtn').onclick = () => feed();
+$('#resetBtn').onclick = () => { liked = []; save(); onboarding(); };
+(async () => {
+  try { const st = await (await fetch('/api/state')).json(); liked = st.liked || []; boards = st.boards || []; } catch {}
+  liked.length >= 3 ? feed() : onboarding();
+})();
+</script>
+</body>
+</html>
