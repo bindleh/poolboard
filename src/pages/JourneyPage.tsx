@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ItemDetail } from "../components/ItemDetail";
+import { METADATA_TOTAL } from "../api/metadataQueries";
 import { Button, ConfirmDialog, ItemImage } from "../components/ui";
 import { isSavable, MAX_ITEMS, SUGGESTIONS_PER_MODE } from "../journey/journey";
 import type { Item, LinkKind, Suggestion } from "../types";
@@ -45,7 +46,7 @@ function SuggestionRow({
       </div>
       {row.status === "loading" && (
         <div className="grid grid-cols-5 gap-2" aria-busy="true">
-          {Array.from({ length: SUGGESTIONS_PER_MODE }, (_, i) => (
+          {Array.from({ length: kind === "metadata" ? METADATA_TOTAL : SUGGESTIONS_PER_MODE }, (_, i) => (
             <div key={i} className="aspect-square bg-neutral-200 animate-pulse" />
           ))}
         </div>

@@ -10,6 +10,11 @@ export interface Item {
   dateMin?: number;
   dateMax?: number;
   types: string[];
+  /** Further fields used by the metadata queries (api/metadataQueries.ts). */
+  contributors?: string[];
+  isPartOf?: string[];
+  medium?: string[];
+  imageColor?: string;
   description: string[];
   rightsName: string[];
   reusePolicy: string[];
@@ -41,7 +46,8 @@ export interface Link {
 
 export interface Suggestion {
   item: Item;
-  distance: number;
+  /** Vector distance; undefined for suggestions that come from a plain search. */
+  distance?: number;
 }
 
 export interface Board {

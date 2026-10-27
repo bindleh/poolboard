@@ -18,7 +18,7 @@ Nutzer:innen erhalten ein zufälliges **Startobjekt** aus Kulturpool (kulturpool
 | Start | Zufälliges Startobjekt; Button „Anderes Zufallsobjekt“. Kein Suchfeld im MVP |
 | Reise | Linear: Vorschläge kommen immer vom zuletzt hinzugefügten Objekt. Max. 20 Objekte |
 | Ausblenden | Bereits hinzugefügte oder schon angezeigte Objekte erscheinen nicht erneut als Vorschlag |
-| Metadaten-Ähnlichkeit | Semantisch aus der API (`on=metadata`). Die Verbindung zeigt zusätzlich geteilte Felder (siehe unten) |
+| Metadaten-Ähnlichkeit | Zeile mit 15 Plätzen (`src/api/metadataQueries.ts`): die ersten 5 aus der semantischen Ähnlichkeitssuche (`on=metadata`, andere Institution), danach 10 aus feldbasierten Zufallsabfragen (Zeit, Künstler:in ×3, Mitwirkende:r↔Künstler:in, Objekttyp+Medium, isPartOf, Institution, Bildfarbe). Fehlende Plätze füllt die Hauptabfrage auf. Die Verbindung zeigt zusätzlich geteilte Felder (siehe unten) |
 | Bild-Ähnlichkeit | Aus der API (`on=image`, CLIP) |
 | Objektfilter | Nur Objekte mit Bild. Lizenz und Rechteinhaber werden in der Detailansicht angezeigt, aber nicht gefiltert |
 | Beenden | „Reise beenden“ erzeugt das Board. Bei 20 Objekten passiert das automatisch |

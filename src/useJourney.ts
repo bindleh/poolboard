@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ApiError, fetchRandomItem, fetchSimilar } from "./api/client";
-import { emptyJourney, journeyReducer, pickSuggestions } from "./journey/journey";
+import { EXTRA_METADATA_QUERIES, MAIN_METADATA, METADATA_TOTAL } from "./api/metadataQueries";
+import { emptyJourney, EXTRA_CAPS, journeyReducer, pickSuggestions } from "./journey/journey";
 import { sharedFields } from "./journey/shared";
 import type { Item, Link, LinkKind, Suggestion } from "./types";
 import { errorMessage } from "./util";
@@ -56,7 +57,7 @@ export function useJourney() {
   }, []);
 
   useEffect(() => {
-    if (!currentId) return;
+    if (!current || !currentId) return;
     const cached = cache.current.get(currentId);
     if (cached) {
       setRows(cached);
@@ -66,39 +67,56 @@ export function useJourney() {
     setRows(LOADING);
     const hide = new Set(seenRef.current);
 
-    const options = { excludeInstitution: current?.institution };
+    const options = { excludeInstitution: current.institution };
     Promise.allSettled([
-      fetchSimilar(currentId, "metadata", options),
+      MAIN_METADATA.fetch(currentId, options),
+      Promise.allSettled(EXTRA_METADATA_QUERIES.map((q) => q.fetch(current, options))),
       fetchSimilar(currentId, "image", options),
-    ]).then(
-      ([m, i]) => {
-        if (cancelled) return;
-        const next: Rows = { metadata: { status: "loading" }, image: { status: "loading" } };
-        const shown: string[] = [];
+    ]).then(([main, extras, i]) => {
+      if (cancelled) return;
+      const next: Rows = { metadata: { status: "loading" }, image: { status: "loading" } };
+      const shown: string[] = [];
 
-        let metadataIds = new Set<string>();
-        if (m.status === "fulfilled") {
-          const suggestions = pickSuggestions(m.value, hide);
-          metadataIds = new Set(suggestions.map((s) => s.item.id));
-          next.metadata = { status: "ok", suggestions };
-          shown.push(...metadataIds);
-        } else {
-          next.metadata = { status: "error", message: rowError(m.reason, "metadata") };
+      let metadataIds = new Set<string>();
+      if (main.status === "fulfilled") {
+        const taken = new Set(hide);
+        const suggestions: Suggestion[] = [];
+        const take = (picked: Suggestion[]) => {
+          picked.forEach((s) => taken.add(s.item.id));
+          suggestions.push(...picked);
+        };
+
+        // 1) leading slots from the main query, 2) the field-based queries in order ...
+        take(pickSuggestions(main.value, taken, MAIN_METADATA.count));
+        if (extras.status === "fulfilled") {
+          extras.value.forEach((r, idx) => {
+            if (r.status !== "fulfilled") return;
+            take(pickSuggestions(r.value, taken, EXTRA_METADATA_QUERIES[idx].count, EXTRA_CAPS));
+          });
         }
+        // 3) ... and whatever is still missing comes from further main-query results.
+        const missing = METADATA_TOTAL - suggestions.length;
+        if (missing > 0) take(pickSuggestions(main.value, taken, missing));
 
-        if (i.status === "fulfilled") {
-          const suggestions = pickSuggestions(i.value, new Set([...hide, ...metadataIds]));
-          next.image = { status: "ok", suggestions };
-          shown.push(...suggestions.map((s) => s.item.id));
-        } else {
-          next.image = { status: "error", message: rowError(i.reason, "image") };
-        }
+        metadataIds = new Set(suggestions.map((s) => s.item.id));
+        next.metadata = { status: "ok", suggestions };
+        shown.push(...metadataIds);
+      } else {
+        next.metadata = { status: "error", message: rowError(main.reason, "metadata") };
+      }
 
-        if (next.metadata.status === "ok" && next.image.status === "ok") cache.current.set(currentId, next);
-        dispatch({ type: "markSeen", ids: shown });
-        setRows(next);
-      },
-    );
+      if (i.status === "fulfilled") {
+        const suggestions = pickSuggestions(i.value, new Set([...hide, ...metadataIds]));
+        next.image = { status: "ok", suggestions };
+        shown.push(...suggestions.map((s) => s.item.id));
+      } else {
+        next.image = { status: "error", message: rowError(i.reason, "image") };
+      }
+
+      if (next.metadata.status === "ok" && next.image.status === "ok") cache.current.set(currentId, next);
+      dispatch({ type: "markSeen", ids: shown });
+      setRows(next);
+    });
     return () => {
       cancelled = true;
     };

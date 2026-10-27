@@ -68,6 +68,9 @@ export interface DiversityCaps {
 /** Collections are full of series and single-creator batches; caps keep the suggestions varied. */
 export const DEFAULT_CAPS: DiversityCaps = { perTitle: 1, perInstitution: 2, perCreator: 1 };
 
+/** Field-based queries pick on purpose from one creator/institution/collection, so only titles are capped. */
+export const EXTRA_CAPS: DiversityCaps = { perTitle: 1, perInstitution: Infinity, perCreator: Infinity };
+
 /**
  * Drops seen items and duplicates, then spreads the result: at most `perTitle` items with
  * the same title, `perCreator` by the same creator and `perInstitution` from the same
