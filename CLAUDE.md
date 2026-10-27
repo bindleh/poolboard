@@ -4,7 +4,7 @@ Lies zuerst [PROJECT.md](./PROJECT.md) (Was und Warum, API, Formate) und [CONTEX
 
 ## Stack
 
-Vite, React, TypeScript (strict), Tailwind, shadcn/ui, React Flow. Kein Backend. Paketmanager: npm.
+Vite, React, TypeScript (strict), Tailwind (eigene Komponenten in src/components, kein shadcn/ui), React Flow, Vitest. Kein Backend. Paketmanager: npm.
 
 ## Regeln
 

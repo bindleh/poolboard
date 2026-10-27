@@ -13,7 +13,7 @@ Nutzer:innen erhalten ein zufälliges **Startobjekt** aus Kulturpool (kulturpool
 | Thema | Entscheidung |
 |---|---|
 | Architektur | Reines Frontend (SPA), kein Backend im MVP. Kulturpool-API ist öffentlich, ohne Key, mit offenem CORS |
-| Stack | Vite, React, TypeScript, Tailwind, shadcn/ui, React Flow für das Board |
+| Stack | Vite, React, TypeScript, Tailwind (eigene schlanke Komponenten statt shadcn/ui), React Flow für das Board |
 | Sprache | UI und Dokumente Deutsch; Code, Bezeichner, Kommentare Englisch |
 | Start | Zufälliges Startobjekt; Button „Anderes Zufallsobjekt“. Kein Suchfeld im MVP |
 | Reise | Linear: Vorschläge kommen immer vom zuletzt hinzugefügten Objekt. Max. 20 Objekte |
@@ -98,7 +98,7 @@ Pro Board wird ein Snapshot gespeichert: Titel, Datum, Objekte in Reihenfolge (I
 
 ## Design
 
-Neutral mit Tailwind und shadcn/ui in Kulturpool-Optik: heller Hintergrund (`#f5f5f5`), Text `#1e1e1e`, schwarze Akzentlinien, Links `#0066cc`, ruhige Flächen, damit die Objektbilder wirken. Kein Dark Mode. Designskizzen des Projektteams (falls vorhanden) liegen unter `docs/design/`.
+Neutral mit Tailwind und eigenen schlanken Komponenten in Kulturpool-Optik: heller Hintergrund (`#f5f5f5`), Text `#1e1e1e`, schwarze Akzentlinien, Links `#0066cc`, ruhige Flächen, damit die Objektbilder wirken. Kein Dark Mode. Designskizzen des Projektteams (falls vorhanden) liegen unter `docs/design/`.
 
 ## Nicht im Umfang
 
