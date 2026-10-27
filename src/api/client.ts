@@ -74,7 +74,7 @@ export async function fetchRandomItem(): Promise<Item> {
  * Similar items for one similarity mode. Requests more than needed so that
  * already seen items can be dropped afterwards.
  */
-export async function fetchSimilar(id: string, on: LinkKind, perPage = 40): Promise<Suggestion[]> {
+export async function fetchSimilar(id: string, on: LinkKind, perPage = 150): Promise<Suggestion[]> {
   const data = await get("/v2/similar", {
     id,
     on,

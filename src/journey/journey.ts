@@ -53,21 +53,51 @@ export function journeyReducer(state: JourneyState, action: JourneyAction): Jour
   }
 }
 
-/** Drops seen items and duplicates, keeps the closest `limit` suggestions. */
+export interface DiversityCaps {
+  perTitle: number;
+  perInstitution: number;
+}
+
+/** Museums digitise whole series with identical titles; without caps they fill every slot. */
+export const DEFAULT_CAPS: DiversityCaps = { perTitle: 1, perInstitution: 3 };
+
+/**
+ * Drops seen items and duplicates, then spreads the result: at most `perTitle` items with
+ * the same title and `perInstitution` from the same institution. If that leaves fewer than
+ * `limit`, the closest skipped items fill the remaining slots.
+ */
 export function pickSuggestions(
   candidates: Suggestion[],
   hide: Set<string>,
   limit = SUGGESTIONS_PER_MODE,
+  caps: DiversityCaps = DEFAULT_CAPS,
 ): Suggestion[] {
-  const out: Suggestion[] = [];
   const taken = new Set<string>();
-  for (const c of candidates) {
-    if (hide.has(c.item.id) || taken.has(c.item.id) || !c.item.previewImage) continue;
+  const usable = candidates.filter((c) => {
+    if (hide.has(c.item.id) || taken.has(c.item.id) || !c.item.previewImage) return false;
     taken.add(c.item.id);
-    out.push(c);
-    if (out.length === limit) break;
+    return true;
+  });
+
+  const titles = new Map<string, number>();
+  const institutions = new Map<string, number>();
+  const picked = new Set<Suggestion>();
+  for (const c of usable) {
+    if (picked.size === limit) break;
+    const title = c.item.title.trim().toLowerCase();
+    const inst = c.item.institution;
+    if ((titles.get(title) ?? 0) >= caps.perTitle) continue;
+    if (inst && (institutions.get(inst) ?? 0) >= caps.perInstitution) continue;
+    titles.set(title, (titles.get(title) ?? 0) + 1);
+    if (inst) institutions.set(inst, (institutions.get(inst) ?? 0) + 1);
+    picked.add(c);
   }
-  return out;
+  for (const c of usable) {
+    if (picked.size === limit) break;
+    picked.add(c);
+  }
+  // Keep the API order (closest first).
+  return usable.filter((c) => picked.has(c));
 }
 
 /** A journey is saved as a board once it holds at least two items. */

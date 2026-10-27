@@ -67,6 +67,35 @@ describe("pickSuggestions", () => {
   });
 });
 
+describe("pickSuggestions diversity", () => {
+  const sug = (id: string, title: string, institution: string): Suggestion => ({
+    item: item(id, { title, institution }),
+    distance: 0.1,
+  });
+
+  it("allows one item per title and three per institution", () => {
+    const out = pickSuggestions(
+      [
+        sug("1", "Serie", "A"),
+        sug("2", "Serie", "A"),
+        sug("3", "Serie", "A"),
+        sug("4", "Andere", "A"),
+        sug("5", "Dritte", "A"),
+        sug("6", "Vierte", "A"),
+        sug("7", "Fünfte", "B"),
+      ],
+      new Set(),
+      4,
+    );
+    expect(out.map((s) => s.item.id)).toEqual(["1", "4", "5", "7"]);
+  });
+
+  it("fills up with the closest skipped items when variety runs out", () => {
+    const out = pickSuggestions([sug("1", "Serie", "A"), sug("2", "Serie", "A"), sug("3", "Serie", "A")], new Set(), 3);
+    expect(out.map((s) => s.item.id)).toEqual(["1", "2", "3"]);
+  });
+});
+
 describe("sharedFields", () => {
   it("treats 'Klimt, Gustav' and 'Gustav Klimt' as the same creator", () => {
     expect(normalizeName("Klimt, Gustav")).toBe(normalizeName("Gustav Klimt"));
