@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kulturpool — Similarity Search</title>
+  <style>
+    :root { color-scheme: light; --ink:#20201e; --muted:#73736d; --line:#e4e2dc; --paper:#f7f6f2; --card:#fff; --accent:#315d50; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    header { padding:22px clamp(18px,4vw,56px); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:20px; }
+    .brand { font-size:13px; text-transform:uppercase; letter-spacing:.14em; font-weight:750; }
+    .top-note { color:var(--muted); font-size:13px; }
+    main { max-width:1440px; margin:auto; padding:clamp(20px,4vw,52px); }
+    .intro { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:28px; }
+    h1 { font-size:clamp(28px,4vw,46px); line-height:1.05; letter-spacing:-.04em; margin:0 0 10px; font-weight:650; }
+    .lede { margin:0; color:var(--muted); max-width:620px; }
+    .form-group { display:flex; flex-direction:column; gap:10px; min-width:min(100%,420px); }
+    .controls { display:flex; gap:8px; width:100%; }
+    input { min-width:0; flex:1; border:1px solid var(--line); background:#fff; border-radius:8px; padding:12px 13px; font:inherit; }
+    button { border:0; border-radius:8px; background:var(--accent); color:white; font:inherit; font-weight:650; padding:12px 16px; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:wait; }
+    
+    /* Mode Toggle Switcher */
+    .mode-toggle { display:inline-flex; background:#e8e6df; padding:3px; border-radius:8px; gap:2px; }
+    .mode-btn { background:transparent; color:var(--muted); font-size:13px; font-weight:600; padding:6px 14px; border-radius:6px; border:0; cursor:pointer; transition:all .15s ease; }
+    .mode-btn.active { background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+    .mode-btn:disabled { cursor:default; opacity:1; }
+
+    .source-label,.section-label { text-transform:uppercase; letter-spacing:.12em; font-size:11px; font-weight:750; color:var(--muted); }
+    .source { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(240px,.85fr); background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:42px; }
+    .source-image-wrap { min-height:280px; background:#eeece6; display:grid; place-items:center; }
+    .source-image { display:block; width:100%; height:100%; max-height:560px; object-fit:contain; }
+    .source-info { padding:clamp(22px,3vw,38px); display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }
+    .source-info h2 { font-size:clamp(23px,3vw,34px); line-height:1.12; letter-spacing:-.03em; margin:12px 0; font-weight:620; }
+    .meta { color:var(--muted); font-size:14px; margin:0 0 18px; }
+    a { color:var(--accent); text-underline-offset:3px; }
+    .results-head { display:flex; justify-content:space-between; align-items:end; gap:16px; margin-bottom:16px; }
+    h3 { margin:4px 0 0; font-size:24px; letter-spacing:-.025em; font-weight:650; }
+    #status { color:var(--muted); font-size:13px; }
+    .grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+    .result { min-width:0; background:var(--card); border:1px solid var(--line); border-radius:9px; overflow:hidden; cursor:pointer; transition:transform .15s,border-color .15s; }
+    .result:hover { transform:translateY(-2px); border-color:#aaa89f; }
+    .thumb { height:230px; background:#eeece6; display:grid; place-items:center; overflow:hidden; }
+    .thumb img { width:100%; height:100%; object-fit:contain; }
+    .result-info { padding:13px 14px 15px; }
+    .result-title { font-size:14px; line-height:1.35; font-weight:650; margin:0 0 6px; }
+    .result-provider { color:var(--muted); font-size:12px; margin:0; }
+    .distance { display:inline-block; margin-top:10px; color:var(--muted); font-size:11px; }
+    .message { border:1px dashed #c9c6bc; border-radius:10px; padding:22px; color:var(--muted); background:#fbfaf7; }
+    footer { max-width:1440px; padding:0 clamp(20px,4vw,52px) 32px; margin:auto; color:var(--muted); font-size:12px; }
+    @media (max-width:950px) { .grid { grid-template-columns:repeat(3,minmax(0,1fr)); } .thumb { height:200px; } .intro { align-items:flex-start; flex-direction:column; } .form-group { width:100%; } }
+    @media (max-width:650px) { header { align-items:flex-start; flex-direction:column; gap:5px; } .source { grid-template-columns:1fr; } .source-image-wrap { min-height:240px; height:330px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .thumb { height:170px; } .results-head { align-items:flex-start; flex-direction:column; gap:4px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Kulturpool / Explore</div>
+    <div class="top-note" id="headerNote">Image &amp; metadata similarity search</div>
+  </header>
+  <main>
+    <section class="intro">
+      <div>
+        <h1 id="mainHeading">Find similar<br>cultural objects.</h1>
+        <p class="lede" id="ledeText">Start with an object, then follow visual or metadata connections through the Kulturpool collections.</p>
+      </div>
+      <div class="form-group">
+        <!-- Similarity Search Switcher -->
+        <div class="mode-toggle" role="tablist" aria-label="Similarity mode">
+          <button type="button" class="mode-btn active" id="btnModeImage" role="tab" aria-selected="true">Image Similarity</button>
+          <button type="button" class="mode-btn" id="btnModeMetadata" role="tab" aria-selected="false">Metadata Similarity</button>
+        </div>
+        
+        <form class="controls" id="searchForm">
+          <input id="objectId" aria-label="Kulturpool object ID" value="5a86fa63-198a-4468-b6e5-6f7d71d30c2a" spellcheck="false">
+          <button id="loadButton" type="submit">Explore ID ↗</button>
+        </form>
+      </div>
+    </section>
+
+    <div id="sourceArea">
+      <div class="message">Loading starting object…</div>
+    </div>
+
+    <section aria-labelledby="resultsTitle">
+      <div class="results-head">
+        <div>
+          <div class="section-label" id="sectionLabel">Neighbours</div>
+          <h3 id="resultsTitle">Similar items</h3>
+        </div>
+        <div id="status" aria-live="polite">Connecting to Kulturpool API…</div>
+      </div>
+      <div id="results" class="grid"></div>
+    </section>
+  </main>
+  <footer>Prototype uses the public Kulturpool API. Dynamic switching between visual (CLIP) and metadata similarity.</footer>
+
+  <script>
+    const API = 'https://api.kulturpool.at';
+    const DEFAULT_ID = '5a86fa63-198a-4468-b6e5-6f7d71d30c2a';
+    
+    let currentMode = 'image'; // 'image' or 'metadata'
+
+    const sourceArea = document.querySelector('#sourceArea');
+    const results = document.querySelector('#results');
+    const status = document.querySelector('#status');
+    const idInput = document.querySelector('#objectId');
+    const loadButton = document.querySelector('#loadButton');
+    const btnModeImage = document.querySelector('#btnModeImage');
+    const btnModeMetadata = document.querySelector('#btnModeMetadata');
+    const resultsTitle = document.querySelector('#resultsTitle');
+    const sectionLabel = document.querySelector('#sectionLabel');
+
+    function escapeHtml(value = '') {
+      return String(value).replace(/[&<>"']/g, c => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+      }[c]));
+    }
+
+    async function getJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        let detail = '';
+        try { detail = (await response.json()).detail || ''; } catch {}
+        throw new Error(detail || `API request failed (${response.status})`);
+      }
+      return response.json();
+    }
+
+    // Helper to extract actual text from EDM fields (handles strings, arrays, and language-keyed objects like {"de": "..."})
+    function extractText(val) {
+      if (!val) return '';
+      if (typeof val === 'string') return val;
+      if (Array.isArray(val)) return extractText(val[0]);
+      if (typeof val === 'object') {
+        // If it's a language map like { de: "Titel" }, prefer 'de', 'en', or take the first value that isn't a language code key alone
+        const langVal = val.de || val.en || val.value || val.def;
+        if (typeof langVal === 'string') return langVal;
+        
+        const values = Object.values(val).filter(v => typeof v === 'string' && v.length > 2);
+        if (values.length > 0) return values[0];
+        
+        // Fallback if object values are nested
+        for (const k of Object.keys(val)) {
+          if (typeof val[k] === 'string' && val[k].length > 2) return val[k];
+        }
+      }
+      return '';
+    }
+
+    // Helper to unwrap WebResource objects or strings for images/URLs
+    function extractUrl(val) {
+      if (!val) return '';
+      if (typeof val === 'string') return val;
+      if (Array.isArray(val)) return extractUrl(val[0]);
+      if (typeof val === 'object') {
+        return extractUrl(val.id || val.url || Object.values(val)[0]);
+      }
+      return '';
+    }
+
+    async function getObject(id) {
+      try {
+        const objectData = await getJson(`${API}/v2/object?id=${encodeURIComponent(id)}`);
+        const metadata = objectData.metadata || objectData;
+        const cho = metadata.aggregatedCHO || metadata;
+        
+        return {
+          uuid: id,
+          title: extractText(cho.title || metadata.title) || 'Untitled object',
+          dataProvider: extractText(metadata.dataProvider || metadata.provider) || 'Kulturpool collection',
+          previewImage: extractUrl(metadata.isShownBy || cho.previewImage || metadata.previewImage),
+          url: extractUrl(metadata.isShownAt || metadata.url) || `https://kulturpool.at/objekte/${id}`
+        };
+      } catch (e) {
+        // Fallback to search index if object endpoint fails
+      }
+
+      const params = new URLSearchParams({ q: id, per_page: '5' });
+      const data = await getJson(`${API}/v2/search?${params}`);
+      const hit = (data.hits || []).find(item => item.document?.uuid === id || item.uuid === id);
+      const doc = hit?.document || hit || {};
+      
+      return {
+        uuid: id,
+        title: extractText(doc.title) || 'Untitled object',
+        dataProvider: extractText(doc.dataProvider) || 'Kulturpool collection',
+        previewImage: extractUrl(doc.previewImage || doc.isShownBy),
+        url: extractUrl(doc.url) || `https://kulturpool.at/objekte/${id}`
+      };
+    }
+
+    function renderSource(doc, id) {
+      const title = doc.title || 'Untitled object';
+      const image = doc.previewImage;
+      const objectUrl = doc.url || `https://kulturpool.at/objekte/${id}`;
+      const provider = doc.dataProvider || 'Kulturpool collection';
+
+      sourceArea.innerHTML = `
+        <article class="source">
+          <div class="source-image-wrap">
+            ${image ? `<img class="source-image" src="${escapeHtml(image)}" alt="${escapeHtml(title)}">` : '<div class="message">No preview image available for this object.</div>'}
+          </div>
+          <div class="source-info">
+            <div class="source-label">Starting object</div>
+            <h2>${escapeHtml(title)}</h2>
+            <p class="meta">${escapeHtml(provider)}<br><span>Object ID: ${escapeHtml(id)}</span></p>
+            <a href="${escapeHtml(objectUrl)}" target="_blank" rel="noopener noreferrer">View object record ↗</a>
+          </div>
+        </article>`;
+    }
+
+    function renderResults(hits) {
+      results.innerHTML = '';
+      if (!hits.length) {
+        results.className = '';
+        results.innerHTML = '<div class="message">No similar objects were returned.</div>';
+        return;
+      }
+      results.className = 'grid';
+      for (const hit of hits) {
+        const doc = hit.document || hit;
+        const title = extractText(doc.title) || 'Untitled object';
+        const image = extractUrl(doc.previewImage || doc.isShownBy);
+        const id = doc.uuid || hit.uuid || '';
+        const provider = extractText(doc.dataProvider) || 'Kulturpool collection';
+        const distLabel = currentMode === 'image' ? 'Visual distance' : 'Distance';
+        const distance = Number.isFinite(Number(hit.vector_distance))
+          ? `<span class="distance">${distLabel}: ${Number(hit.vector_distance).toFixed(3)}</span>` : '';
+        const card = document.createElement('article');
+        card.className = 'result';
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `Explore similar objects to ${title}`);
+        card.innerHTML = `
+          <div class="thumb">${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy">` : '<span class="meta">No image preview</span>'}</div>
+          <div class="result-info">
+            <p class="result-title">${escapeHtml(title)}</p>
+            <p class="result-provider">${escapeHtml(provider)}</p>
+            ${distance}
+          </div>`;
+        const explore = () => { if (id) loadObject(id); };
+        card.addEventListener('click', explore);
+        card.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); explore(); }
+        });
+        results.appendChild(card);
+      }
+    }
+
+    function updateModeUI() {
+      if (currentMode === 'image') {
+        btnModeImage.classList.add('active');
+        btnModeImage.setAttribute('aria-selected', 'true');
+        btnModeMetadata.classList.remove('active');
+        btnModeMetadata.setAttribute('aria-selected', 'false');
+        sectionLabel.textContent = 'Visual neighbours';
+        resultsTitle.textContent = 'Similar images';
+      } else {
+        btnModeMetadata.classList.add('active');
+        btnModeMetadata.setAttribute('aria-selected', 'true');
+        btnModeImage.classList.remove('active');
+        btnModeImage.setAttribute('aria-selected', 'false');
+        sectionLabel.textContent = 'Metadata neighbours';
+        resultsTitle.textContent = 'Similar metadata';
+      }
+    }
+
+    async function loadObject(id) {
+      id = id.trim();
+      if (!id) return;
+      idInput.value = id;
+      loadButton.disabled = true;
+      btnModeImage.disabled = true;
+      btnModeMetadata.disabled = true;
+      
+      status.textContent = `Loading ${currentMode} similarity…`;
+      sourceArea.innerHTML = '<div class="message">Loading starting object…</div>';
+      results.className = '';
+      results.innerHTML = `<div class="message">Finding ${currentMode} neighbours…</div>`;
+
+      try {
+        const [doc, similar] = await Promise.all([
+          getObject(id),
+          getJson(`${API}/v2/similar?${new URLSearchParams({ id, on: currentMode, per_page: '12' })}`)
+        ]);
+        renderSource(doc, id);
+        renderResults((similar.hits || []).filter(hit => hit.document || hit.uuid));
+        status.textContent = `${(similar.hits || []).length} results (${currentMode})`;
+      } catch (error) {
+        sourceArea.innerHTML = `<div class="message">Couldn't load this object. ${escapeHtml(error.message)}<br>Check the ID, or try another Kulturpool object.</div>`;
+        results.className = '';
+        results.innerHTML = '';
+        status.textContent = 'Request failed';
+      } finally {
+        loadButton.disabled = false;
+        btnModeImage.disabled = false;
+        btnModeMetadata.disabled = false;
+      }
+    }
+
+    btnModeImage.addEventListener('click', () => {
+      if (currentMode === 'image') return;
+      currentMode = 'image';
+      updateModeUI();
+      loadObject(idInput.value);
+    });
+
+    btnModeMetadata.addEventListener('click', () => {
+      if (currentMode === 'metadata') return;
+      currentMode = 'metadata';
+      updateModeUI();
+      loadObject(idInput.value);
+    });
+
+    document.querySelector('#searchForm').addEventListener('submit', event => {
+      event.preventDefault();
+      loadObject(idInput.value);
+    });
+
+    updateModeUI();
+    loadObject(DEFAULT_ID);
+  </script>
+</body>
+</html>
