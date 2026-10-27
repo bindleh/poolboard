@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KulturPin – Ähnliches aus dem Kulturpool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#E3E6E1; --paper:#F3F4F1; --ink:#1E2A2B; --muted:#5E6B6A; --line:#C9CFC8; --accent:#1F5F6B;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --wall:#171C1C; --paper:#202727; --ink:#E6EAE7; --muted:#9AA6A4; --line:#344040; --accent:#7FC0CC; color-scheme:dark;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--wall);color:var(--ink);font:16px/1.5 var(--sans)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{position:sticky;top:0;z-index:5;background:var(--wall);border-bottom:1px solid var(--line);
+  display:flex;gap:1.5rem;align-items:center;padding:.9rem clamp(1rem,3vw,2rem)}
+h1{font:600 1.5rem/1 var(--serif);margin:0;letter-spacing:-.01em}
+form{flex:1;display:flex;max-width:34rem}
+input[type=search]{flex:1;padding:.6rem .8rem;border:1px solid var(--line);background:var(--paper);border-radius:4px 0 0 4px}
+form button{padding:.6rem 1rem;border:0;background:var(--accent);color:var(--paper);border-radius:0 4px 4px 0;cursor:pointer}
+
+/* Die Spur: der Weg durch die Ähnlichkeiten */
+#trail{display:flex;gap:.4rem;align-items:center;overflow-x:auto;padding:.6rem clamp(1rem,3vw,2rem);
+  border-bottom:1px solid var(--line);min-height:3.6rem}
+#trail:empty::before{content:"Dein Weg durch die Sammlung erscheint hier.";color:var(--muted);font-size:.9rem}
+#trail button{flex:none;width:2.6rem;height:2.6rem;padding:0;border:1px solid var(--line);border-radius:3px;
+  background:var(--paper) center/cover no-repeat;cursor:pointer}
+#trail button[aria-current]{outline:2px solid var(--accent)}
+#trail span{color:var(--muted)}
+
+main{padding:1.2rem clamp(1rem,3vw,2rem) 4rem}
+.grid{columns:14rem;column-gap:1rem}
+.pin{break-inside:avoid;margin:0 0 1rem;display:block;width:100%;text-align:left;border:0;padding:0;
+  background:none;cursor:pointer}
+.pin img{display:block;width:100%;height:auto;border-radius:3px;background:var(--paper)}
+.pin .noimg{aspect-ratio:4/3;border-radius:3px;background:var(--paper);display:grid;place-items:center;color:var(--muted);font-size:.85rem}
+.pin p{margin:.35rem 0 0;font-size:.85rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pin small{color:var(--muted);font-size:.75rem}
+
+/* Detailansicht */
+#detail{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:2rem;margin-bottom:2.5rem}
+#detail img{width:100%;max-height:75vh;object-fit:contain;background:var(--paper);border-radius:3px}
+#detail h2{font:600 clamp(1.5rem,3vw,2.2rem)/1.15 var(--serif);margin:0 0 .6rem}
+#detail dl{display:grid;grid-template-columns:auto 1fr;gap:.2rem 1rem;color:var(--muted);font-size:.9rem}
+#detail dd{margin:0;color:var(--ink)}
+#detail a{color:var(--accent)}
+.lane h3{font:600 1.25rem var(--serif);margin:2rem 0 .2rem}
+.lane .hint{color:var(--muted);font-size:.85rem;margin:0 0 1rem}
+.status{color:var(--muted);padding:1rem 0}
+.toggle{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-top:1rem}
+.toggle button{border:0;background:none;padding:.4rem .8rem;cursor:pointer}
+.toggle button[aria-pressed=true]{background:var(--accent);color:var(--paper)}
+.upload{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .9rem;border:1px solid var(--accent);color:var(--accent);border-radius:4px;cursor:pointer;white-space:nowrap}
+.upload input{position:absolute;width:1px;height:1px;opacity:0}
+.upload:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+body.dragging main{outline:2px dashed var(--accent);outline-offset:-1rem}
+.pin .dist{float:right;font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.open{display:inline-block;font-size:.7rem;padding:0 .35rem;border:1px solid var(--accent);color:var(--accent);border-radius:3px;margin-left:.3rem}
+#detail .desc{font:1rem/1.6 var(--serif);max-width:60ch;margin:1rem 0}
+#detail .links{display:flex;gap:1rem;flex-wrap:wrap}
+@media (max-width:760px){header{flex-wrap:wrap}#detail{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>KulturPin</h1>
+  <form id="f" role="search">
+    <input type="search" id="q" placeholder="Suche in Österreichs Sammlungen, z. B. Blumen, Wien, Porträt" aria-label="Suchbegriff">
+    <button>Suchen</button>
+  </form>
+  <label class="upload">Eigenes Foto vergleichen<input type="file" id="file" accept="image/jpeg,image/png,image/webp"></label>
+</header>
+<nav id="trail" aria-label="Dein Weg"></nav>
+<main id="main"></main>
+
+<script>
+const $ = s => document.querySelector(s);
+const main = $("#main");
+const trail = [];          // besuchte Objekte
+const known = new Map();   // id -> item (Titel, Bild ...) aus früheren Antworten
+let mode = "both";         // both | metadata | image
+
+async function api(path, params){
+  const r = await fetch(path + "?" + new URLSearchParams(params));
+  if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.detail || r.status); }
+  return r.json();
+}
+
+function pin(item){
+  known.set(item.id, item);
+  const b = document.createElement("button");
+  b.className = "pin";
+  const ratio = item.aspect ? `style="aspect-ratio:${item.aspect}"` : "";
+  b.innerHTML = (item.image
+      ? `<img loading="lazy" alt="" ${ratio} src="${item.image}">`
+      : `<div class="noimg">Kein Bild</div>`) +
+    `<p></p><small></small>`;
+  b.querySelector("p").textContent = item.title;
+  b.querySelector("small").textContent = [item.creator, item.date].filter(Boolean).join(", ");
+  if(item.distance != null){
+    const d = document.createElement("span"); d.className = "dist";
+    d.title = "Abstand (0 = identisch)"; d.textContent = item.distance.toFixed(2);
+    b.querySelector("small").prepend(d);
+  }
+  b.onclick = () => open(item.id);
+  const img = b.querySelector("img");
+  if(img) img.onerror = () => img.replaceWith(Object.assign(document.createElement("div"),{className:"noimg",textContent:"Bild nicht ladbar"}));
+  return b;
+}
+
+function grid(items){
+  const g = document.createElement("div"); g.className = "grid";
+  items.forEach(i => g.append(pin(i)));
+  return g;
+}
+
+async function search(q){
+  main.innerHTML = `<p class="status">Suche läuft …</p>`;
+  try{
+    const {items, found} = await api("/api/search", {q: q || "*"});
+    main.innerHTML = "";
+    if(!items.length){ main.innerHTML = `<p class="status">Keine Treffer für „${q}“. Versuch einen allgemeineren Begriff.</p>`; return; }
+    main.append(grid(items));
+  }catch(e){ main.innerHTML = `<p class="status">Suche fehlgeschlagen: ${e.message}. Läuft das Backend (uvicorn app:app)?</p>`; }
+}
+
+function renderTrail(currentId){
+  const t = $("#trail"); t.innerHTML = "";
+  trail.forEach((id, i) => {
+    if(i) t.append(Object.assign(document.createElement("span"),{textContent:"›"}));
+    const it = id === "__upload" ? {title:"Dein Foto", image: upload.url} : (known.get(id) || {});
+    const b = document.createElement("button");
+    b.title = it.title || id;
+    if(it.image) b.style.backgroundImage = `url("${it.image}")`;
+    if(id === currentId) b.setAttribute("aria-current","true");
+    b.onclick = () => { trail.length = i; id === "__upload" ? showUpload() : open(id); };
+    t.append(b);
+  });
+  t.scrollLeft = t.scrollWidth;
+}
+
+async function lane(title, hint, on, id){
+  const sec = document.createElement("section"); sec.className = "lane";
+  sec.innerHTML = `<h3>${title}</h3><p class="hint">${hint}</p><p class="status">Lädt …</p>`;
+  api("/api/similar", {id, on, per_page: 24}).then(({items}) => {
+    sec.querySelector(".status").remove();
+    sec.append(items.length ? grid(items) : Object.assign(document.createElement("p"),{className:"status",textContent:"Keine ähnlichen Objekte gefunden."}));
+  }).catch(e => sec.querySelector(".status").textContent =
+    on === "image" ? "Für dieses Objekt gibt es keinen Bildvergleich." : "Ähnlichkeitssuche fehlgeschlagen: " + e.message);
+  return sec;
+}
+
+async function open(id){
+  if(trail.at(-1) !== id) trail.push(id);
+  renderTrail(id);
+  const it = known.get(id) || {title: id};
+  main.innerHTML = "";
+  const d = document.createElement("section"); d.id = "detail";
+  d.innerHTML = `
+    <div>${it.image ? `<img alt="">` : `<div class="pin"><div class="noimg">Kein Bild</div></div>`}</div>
+    <div>
+      <h2></h2>
+      <dl>
+        <dt>Von</dt><dd class="creator">–</dd>
+        <dt>Datierung</dt><dd class="date">–</dd>
+        <dt>Institution</dt><dd class="prov">–</dd>
+        <dt>Rechte</dt><dd class="rights">–</dd>
+      </dl>
+      <p class="desc"></p>
+      <div class="links">
+        <a class="kp" target="_blank" rel="noopener">Auf kulturpool.at ansehen</a>
+        <a class="src" target="_blank" rel="noopener" hidden>Beim Museum ansehen</a>
+      </div>
+      <div class="toggle" role="group" aria-label="Ähnlichkeit anzeigen nach">
+        <button data-m="both">Beides</button><button data-m="metadata">Inhalt</button><button data-m="image">Bild</button>
+      </div>
+    </div>`;
+  if(it.image){
+    const img = d.querySelector("img");
+    img.src = it.imageLarge || it.image;
+    img.onerror = () => { if(img.src !== it.image) img.src = it.image; };
+  }
+  d.querySelector("h2").textContent = it.title;
+  const set = (sel, v) => { if(v) d.querySelector(sel).textContent = v; };
+  set(".creator", it.creator); set(".date", it.date); set(".prov", it.provider);
+  if(it.rights){ d.querySelector(".rights").textContent = it.rights;
+    if(it.open) d.querySelector(".rights").insertAdjacentHTML("beforeend", `<span class="open">frei nutzbar</span>`); }
+  const desc = d.querySelector(".desc");
+  if(it.description) desc.textContent = it.description.length > 600 ? it.description.slice(0, 600) + " …" : it.description;
+  else desc.remove();
+  d.querySelector(".kp").href = it.url || `https://kulturpool.at/objekte/${encodeURIComponent(id)}`;
+  if(it.sourceUrl){ const a = d.querySelector(".src"); a.href = it.sourceUrl; a.hidden = false; }
+  d.querySelectorAll(".toggle button").forEach(b => {
+    b.setAttribute("aria-pressed", b.dataset.m === mode);
+    b.onclick = () => { mode = b.dataset.m; open(id); };
+  });
+  main.append(d);
+  if(mode !== "image")    main.append(await lane("Ähnlich im Inhalt", "Ähnliche Beschreibung, Themen und Schlagworte.", "metadata", id));
+  if(mode !== "metadata") main.append(await lane("Ähnlich im Bild", "Ähnliche Farben, Formen und Komposition.", "image", id));
+  window.scrollTo({top:0});
+}
+
+// ---------- Eigenes Foto ----------
+const upload = {url: null, items: null};
+
+async function sendUpload(file){
+  if(!file || !file.type.startsWith("image/")){ alert("Bitte eine Bilddatei wählen (JPG, PNG oder WebP)."); return; }
+  if(upload.url) URL.revokeObjectURL(upload.url);
+  upload.url = URL.createObjectURL(file); upload.items = null;
+  trail.length = 0; trail.push("__upload"); renderTrail("__upload");
+  showUpload(true);
+  const fd = new FormData(); fd.append("image", file); fd.append("per_page", "40");
+  try{
+    const r = await fetch("/api/similar/image", {method:"POST", body: fd});
+    if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.detail || r.status); }
+    upload.items = (await r.json()).items;
+    showUpload();
+  }catch(e){
+    main.querySelector(".status").textContent = "Vergleich fehlgeschlagen: " + e.message + ". Probier ein kleineres JPG oder PNG.";
+  }
+}
+
+function showUpload(loading){
+  renderTrail("__upload");
+  main.innerHTML = "";
+  const d = document.createElement("section"); d.id = "detail";
+  d.innerHTML = `<div><img alt="Dein hochgeladenes Foto"></div>
+    <div><h2>Dein Foto</h2><p class="desc">Diese Werke aus österreichischen Sammlungen sehen deinem Bild am ähnlichsten. Wähl eins aus, um weiterzustöbern.</p></div>`;
+  d.querySelector("img").src = upload.url;
+  main.append(d);
+  const sec = document.createElement("section"); sec.className = "lane";
+  sec.innerHTML = `<h3>Ähnlich im Bild</h3>`;
+  if(loading || !upload.items) sec.insertAdjacentHTML("beforeend", `<p class="status">Vergleiche mit 3 Millionen Objekten …</p>`);
+  else sec.append(upload.items.length ? grid(upload.items) : Object.assign(document.createElement("p"),{className:"status",textContent:"Keine ähnlichen Werke gefunden."}));
+  main.append(sec);
+  window.scrollTo({top:0});
+}
+
+$("#file").onchange = e => sendUpload(e.target.files[0]);
+// Drag and drop aufs Fenster
+addEventListener("dragover", e => { e.preventDefault(); document.body.classList.add("dragging"); });
+addEventListener("dragleave", e => { if(!e.relatedTarget) document.body.classList.remove("dragging"); });
+addEventListener("drop", e => { e.preventDefault(); document.body.classList.remove("dragging"); sendUpload(e.dataTransfer.files[0]); });
+
+$("#f").onsubmit = e => { e.preventDefault(); trail.length = 0; renderTrail(); search($("#q").value.trim()); };
+search("*");
+</script>
+</body>
+</html>
