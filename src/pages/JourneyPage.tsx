@@ -128,7 +128,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         )}
         {!onlyStart && <Button onClick={undo}>Letzten Schritt zurücknehmen</Button>}
         <Button variant="primary" onClick={onFinish} disabled={onlyStart}>
-          Reise beenden
+          Reise fertigstellen
         </Button>
         <Button onClick={handleNew}>Neue Reise</Button>
       </div>
@@ -216,8 +216,9 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
       {confirmNew && (
         <ConfirmDialog
           title="Neue Reise starten?"
-          text="Die aktuelle Reise wird als Board in der History gespeichert."
-          confirmLabel="Speichern und neu starten"
+          text="Die aktuelle Reise wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          confirmLabel="Verwerfen und neu starten"
+          danger
           onCancel={() => setConfirmNew(false)}
           onConfirm={() => {
             setConfirmNew(false);

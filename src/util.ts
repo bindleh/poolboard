@@ -36,3 +36,10 @@ export function errorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   return "Unbekannter Fehler";
 }
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+/** Kulturpool id from a plain id or a pasted kulturpool.at object link; undefined for other text. */
+export function extractId(input: string): string | undefined {
+  return input.match(UUID)?.[0].toLowerCase();
+}

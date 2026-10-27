@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { defaultBoardTitle, isSavable, MAX_ITEMS } from "./journey/journey";
+import { SearchDialog } from "./components/SearchDialog";
+import { Button, ConfirmDialog } from "./components/ui";
 import { BoardPage } from "./pages/BoardPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { JourneyPage } from "./pages/JourneyPage";
 import { historyStore, newBoardId } from "./storage/history";
-import type { Board } from "./types";
+import type { Board, Item } from "./types";
 import { useJourney } from "./useJourney";
 
 type Page = { name: "journey" } | { name: "history" } | { name: "board"; id: string };
@@ -13,7 +15,11 @@ export default function App() {
   const journey = useJourney();
   const [page, setPage] = useState<Page>({ name: "journey" });
   const [boards, setBoards] = useState<Board[]>(() => historyStore.list());
-  const { state, startRandom, reset, starting, startError } = journey;
+  const { state, startRandom, startWith, reset, starting, startError } = journey;
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string | null>(null);
+  // Item chosen in the search while a journey with several items is running: ask first.
+  const [pendingStart, setPendingStart] = useState<Item | null>(null);
 
   const refresh = useCallback(() => setBoards(historyStore.list()), []);
 
@@ -43,10 +49,25 @@ export default function App() {
     setPage({ name: "board", id: board.id });
   }, [saveJourney, reset]);
 
-  const newJourney = useCallback(() => {
-    saveJourney();
-    reset();
-  }, [saveJourney, reset]);
+  const newJourney = reset;
+
+  const beginWith = useCallback(
+    (item: Item) => {
+      startWith(item);
+      setPendingStart(null);
+      setSearchQuery(null);
+      setPage({ name: "journey" });
+    },
+    [startWith],
+  );
+
+  const chooseStart = useCallback(
+    (item: Item) => {
+      if (isSavable(state)) setPendingStart(item);
+      else beginWith(item);
+    },
+    [state, beginWith],
+  );
 
   // At the item limit the journey ends by itself.
   useEffect(() => {
@@ -69,6 +90,26 @@ export default function App() {
           <button className={navClass(page.name !== "journey")} onClick={() => setPage({ name: "history" })}>
             History ({boards.length})
           </button>
+          <form
+            className="ml-auto flex gap-2"
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const q = searchInput.trim();
+              if (q) setSearchQuery(q);
+            }}
+          >
+            <input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Suche: Text oder Objekt-ID"
+              aria-label="Suche nach Text oder Objekt-ID"
+              className="w-40 sm:w-72 border border-neutral-400 bg-white px-2 py-1.5 text-sm focus:outline-2 focus:outline-[#0066cc]"
+            />
+            <Button type="submit" variant="primary">
+              Suchen
+            </Button>
+          </form>
         </nav>
       </header>
 
@@ -102,6 +143,19 @@ export default function App() {
         ) : (
           <p className="p-8">Board nicht gefunden.</p>
         ))}
+
+      {searchQuery && <SearchDialog query={searchQuery} onClose={() => setSearchQuery(null)} onStart={chooseStart} />}
+
+      {pendingStart && (
+        <ConfirmDialog
+          title="Neue Reise mit diesem Objekt starten?"
+          text="Die aktuelle Reise wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          confirmLabel="Verwerfen und neu starten"
+          danger
+          onCancel={() => setPendingStart(null)}
+          onConfirm={() => beginWith(pendingStart)}
+        />
+      )}
     </>
   );
 }

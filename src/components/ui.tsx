@@ -77,21 +77,31 @@ export function ConfirmDialog({
   danger,
   onConfirm,
   onCancel,
+  secondaryLabel,
+  onSecondary,
 }: {
   title: string;
   text: string;
-  confirmLabel: string;
+  confirmLabel?: string;
   danger?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Optional third choice, shown as a red button between Abbrechen and the main button. */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
 }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
       <div className="bg-white max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-2">{title}</h2>
         <p className="text-sm text-neutral-700 mb-5">{text}</p>
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button onClick={onCancel}>Abbrechen</Button>
+          {secondaryLabel && onSecondary && (
+            <Button variant="danger" onClick={onSecondary}>
+              {secondaryLabel}
+            </Button>
+          )}
           <Button variant={danger ? "danger" : "primary"} onClick={onConfirm}>
             {confirmLabel}
           </Button>

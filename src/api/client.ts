@@ -121,6 +121,30 @@ export async function searchSuggestions(params: Record<string, string | number>)
   return (data.hits ?? []).map((h: RawDoc) => ({ item: toItem(h.document), distance: undefined }));
 }
 
+/** One item by its Kulturpool id; undefined if there is none. */
+export async function fetchItemById(id: string): Promise<Item | undefined> {
+  const data = await get("/v2/search", { q: "*", facet_by: "", per_page: 1, filter_by: `id:=${id}` });
+  const hit = data.hits?.[0];
+  return hit ? toItem(hit.document) : undefined;
+}
+
+export interface TextSearchResult {
+  items: Item[];
+  found: number;
+}
+
+/** Full-text search over items that have an image. */
+export async function searchItems(text: string, page = 1, perPage = 24): Promise<TextSearchResult> {
+  const data = await get("/v2/search", {
+    q: text,
+    facet_by: "",
+    page,
+    per_page: perPage,
+    filter_by: IMAGE_FILTER,
+  });
+  return { items: (data.hits ?? []).map((h: RawDoc) => toItem(h.document)), found: data.found ?? 0 };
+}
+
 /** Ids from `ids` that still exist in Kulturpool (one request, max 250 ids). */
 export async function fetchExistingIds(ids: string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set();

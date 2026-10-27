@@ -56,6 +56,12 @@ export function useJourney() {
     }
   }, []);
 
+  /** Begin a journey with a chosen item instead of a random one. */
+  const startWith = useCallback((item: Item) => {
+    cache.current.clear();
+    dispatch({ type: "start", item });
+  }, []);
+
   useEffect(() => {
     if (!current || !currentId) return;
     const cached = cache.current.get(currentId);
@@ -148,5 +154,5 @@ export function useJourney() {
     dispatch({ type: "reset" });
   }, []);
 
-  return { state, current, rows, starting, startError, startRandom, add, undo, reset, retry };
+  return { state, current, rows, starting, startError, startRandom, startWith, add, undo, reset, retry };
 }
