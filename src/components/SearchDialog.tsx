@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchItemById, searchItems } from "../api/client";
+import { fetchItemById } from "../api/client";
+import { searchItemsMultilingual } from "../api/multilingualSearch";
 import type { Item } from "../types";
 import { errorMessage, extractId } from "../util";
 import { ItemDetail } from "./ItemDetail";
@@ -16,7 +17,7 @@ type State =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "id"; item?: Item }
-  | { status: "text"; items: Item[]; found: number; loadingMore: boolean };
+  | { status: "text"; items: Item[]; found: number; loadingMore: boolean; info?: string };
 
 const PAGE_SIZE = 24;
 
@@ -34,8 +35,8 @@ export function SearchDialog({ query, onClose, onStart }: Props) {
     setSelected(null);
     const run = id
       ? fetchItemById(id).then((item): State => ({ status: "id", item }))
-      : searchItems(query, 1, PAGE_SIZE).then(
-          (r): State => ({ status: "text", items: r.items, found: r.found, loadingMore: false }),
+      : searchItemsMultilingual(query, 1, PAGE_SIZE).then(
+          (r): State => ({ status: "text", items: r.items, found: r.found, loadingMore: false, info: r.info }),
         );
     run
       .then((s) => !cancelled && setState(s))
@@ -50,7 +51,7 @@ export function SearchDialog({ query, onClose, onStart }: Props) {
     const next = page + 1;
     setState({ ...state, loadingMore: true });
     try {
-      const r = await searchItems(query, next, PAGE_SIZE);
+      const r = await searchItemsMultilingual(query, next, PAGE_SIZE);
       setPage(next);
       setState((s) =>
         s.status === "text"
@@ -97,9 +98,10 @@ export function SearchDialog({ query, onClose, onStart }: Props) {
         )}
         {state.status === "text" && state.items.length > 0 && (
           <>
-            <p className="text-sm text-neutral-500 mb-3">
+            <p className="text-sm text-neutral-500 mb-1">
               {state.found.toLocaleString("de-AT")} Treffer mit Bild – Objekt anklicken, um Details zu sehen.
             </p>
+            {state.info && <p className="text-xs text-neutral-500 mb-3">{state.info}</p>}
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {state.items.map((it) => (
                 <li key={it.id}>
