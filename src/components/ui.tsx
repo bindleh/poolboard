@@ -33,10 +33,12 @@ export function ItemImage({
   item,
   size = "small",
   className = "",
+  onLoad,
 }: {
   item: Item;
   size?: "small" | "medium";
   className?: string;
+  onLoad?: (img: HTMLImageElement) => void;
 }) {
   const [failed, setFailed] = useState(false);
   if (item.removed) {
@@ -53,6 +55,7 @@ export function ItemImage({
       alt={item.title}
       loading="lazy"
       onError={() => setFailed(true)}
+      onLoad={onLoad && ((e) => onLoad(e.currentTarget))}
       className={`object-cover bg-tile ${className}`}
     />
   );

@@ -51,6 +51,31 @@ function mixTiles(rows: Record<LinkKind, RowState>): Tile[] {
   return tiles.sort((x, y) => hash(x.suggestion.item.id) - hash(y.suggestion.item.id));
 }
 
+/** Tile that takes the image's own proportions once loaded (clamped for extreme formats), so little gets cropped. */
+function SuggestionTile({ tile, onSelect }: { tile: Tile; onSelect: (tile: Tile) => void }) {
+  const { item } = tile.suggestion;
+  const [ratio, setRatio] = useState<number | null>(null);
+  const placeholder = 1 / TILE_RATIOS[hash(item.id + "r") % TILE_RATIOS.length];
+  return (
+    <button
+      onClick={() => onSelect(tile)}
+      title={item.title}
+      className="group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-xl bg-tile"
+      style={{ aspectRatio: ratio ?? placeholder }}
+    >
+      <ItemImage
+        item={item}
+        onLoad={(img) => {
+          if (img.naturalWidth && img.naturalHeight) {
+            setRatio(Math.min(2, Math.max(0.5, img.naturalWidth / img.naturalHeight)));
+          }
+        }}
+        className="w-full h-full object-top transition-transform group-hover:scale-105"
+      />
+    </button>
+  );
+}
+
 function SuggestionGrid({
   rows,
   onSelect,
@@ -96,15 +121,7 @@ function SuggestionGrid({
       {tiles.length > 0 && (
         <div className={columns}>
           {tiles.map((t) => (
-            <button
-              key={t.suggestion.item.id}
-              onClick={() => onSelect(t)}
-              title={t.suggestion.item.title}
-              className="group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-xl bg-tile"
-              style={{ aspectRatio: 1 / TILE_RATIOS[hash(t.suggestion.item.id + "r") % TILE_RATIOS.length] }}
-            >
-              <ItemImage item={t.suggestion.item} className="w-full h-full transition-transform group-hover:scale-105" />
-            </button>
+            <SuggestionTile key={t.suggestion.item.id} tile={t} onSelect={onSelect} />
           ))}
         </div>
       )}
@@ -135,7 +152,7 @@ function JourneyStrip({ items, onSelect }: { items: Item[]; onSelect: (item: Ite
             title={item.title}
             className={`relative block w-12 h-12 overflow-hidden rounded-lg cursor-pointer ${index === items.length - 1 ? "ring-2 ring-brand-pink ring-offset-2" : ""}`}
           >
-            <ItemImage item={item} className="w-full h-full" />
+            <ItemImage item={item} className="w-full h-full object-top" />
             <span className="absolute left-0.5 top-0.5 rounded-full bg-brand-pink text-ink text-[10px] font-medium px-1">
               {index + 1}
             </span>
