@@ -124,7 +124,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         </Button>
       </div>
 
-      <div className="grid lg:grid-cols-[340px_1fr] gap-x-8 gap-y-5">
+      <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-5">
         <div className="space-y-4">
           <div>
             <div className="text-lg font-medium">
@@ -141,7 +141,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
               className="block w-full overflow-hidden rounded-xl"
               aria-label="Details zum aktuellen Objekt"
             >
-              <ItemImage item={current} size="medium" className="w-full aspect-[4/3] !object-contain" />
+              <ItemImage item={current} size="medium" className="w-full aspect-square !object-contain" />
             </button>
             <h1 className="text-2xl font-semibold mt-4 leading-snug">{current.title}</h1>
             <dl className="text-[15px] text-neutral-600 mt-2 space-y-0.5">
