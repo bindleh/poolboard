@@ -21,9 +21,9 @@ Nutzer:innen erhalten ein zufälliges **Startobjekt** aus Kulturpool (kulturpool
 | Metadaten-Ähnlichkeit | Zeile mit 15 Plätzen (`src/api/metadataQueries.ts`): die ersten 5 aus der semantischen Ähnlichkeitssuche (`on=metadata`, andere Institution), danach 10 aus feldbasierten Zufallsabfragen (Zeit, Künstler:in ×3, Mitwirkende:r↔Künstler:in, Objekttyp+Medium, isPartOf, Institution, Bildfarbe). Fehlende Plätze füllt die Hauptabfrage auf. Die Verbindung zeigt zusätzlich geteilte Felder (siehe unten) |
 | Bild-Ähnlichkeit | Aus der API (`on=image`, CLIP) |
 | Objektfilter | Nur Objekte mit Bild. Lizenz und Rechteinhaber werden in der Detailansicht angezeigt, aber nicht gefiltert |
-| Beenden | „Reise beenden“ erzeugt das Board. Bei 20 Objekten passiert das automatisch |
-| Neue Reise | Mit Rückfrage. Eine Reise mit mindestens 2 Objekten wird als Board in der History gespeichert, sonst verworfen |
-| Rückgängig | Button „Letzten Schritt zurücknehmen“ entfernt das zuletzt hinzugefügte Objekt |
+| Beenden | „Reise fertigstellen“ erzeugt das Board. Bei 20 Objekten passiert das automatisch |
+| Neue Reise | Mit Rückfrage. Die laufende Reise wird verworfen (Speichern nur über „Reise fertigstellen“) |
+| Rückgängig | Button „Zurück“ entfernt das zuletzt hinzugefügte Objekt |
 | Board-Titel | Automatisch (z. B. nach Startobjekt/Datum), editierbar |
 | History | Lokal im Browser (IndexedDB oder localStorage). Snapshot ohne Bilddateien |
 | Entferntes Objekt | Wird ein Objekt nicht mehr gefunden, zeigt das Board ein Standard-Platzhalterobjekt „Dieses Objekt wurde entfernt“ |
@@ -33,14 +33,14 @@ Nutzer:innen erhalten ein zufälliges **Startobjekt** aus Kulturpool (kulturpool
 
 1. Startseite lädt ein zufälliges Startobjekt mit Bild; „Anderes Zufallsobjekt“ würfelt neu.
 2. Hauptbildschirm:
-   - Oben: Fortschritt „Objekt n / 20“, „Reise beenden“, „Neue Reise“.
+   - Oben: Fortschritt „Objekt n / 20“, „Reise fertigstellen“, „Neue Reise“.
    - Links groß: aktuelles Objekt mit Bild und Kerndaten (Titel, Künstler:in, Datierung, Institution, Lizenz) und Link zu kulturpool.at.
    - Rechts oder darunter: zwei Reihen à 10 Thumbnails, „Inhaltlich ähnlich“ und „Optisch ähnlich“.
    - Unten: Leiste mit den bisherigen Objekten als Thumbnails.
 3. Klick auf einen Vorschlag öffnet ein Detail-Overlay (großes Bild, alle verfügbaren Metadaten, Lizenz/Rechteinhaber) mit „Zur Reise hinzufügen“ und „Schließen“.
 4. Hinzufügen macht das Objekt zum aktuellen Objekt; neue Vorschläge werden geladen.
-5. „Letzten Schritt zurücknehmen“.
-6. „Reise beenden“ oder 20 Objekte erzeugen das Board (Karten mit Pfeilen, Verbindungslabel mit Art, Score, geteilten Feldern). Anordnung als Zickzack/Schlange statt einer langen Zeile.
+5. „Zurück“.
+6. „Reise fertigstellen“ oder 20 Objekte erzeugen das Board (Karten mit Pfeilen, Verbindungslabel mit Art, Score, geteilten Feldern). Anordnung als Zickzack/Schlange statt einer langen Zeile.
 7. History-Seite: Liste der Boards mit Vorschaubild, Titel, Datum, Objektanzahl; Aktionen „Öffnen“ und „Löschen“ (mit Rückfrage).
 8. Export/Import der Boards als HTML im Kulturpool-Favoriten-Format (siehe unten).
 9. Ladezustände, Fehlerzustände (API nicht erreichbar, Rate-Limit, leere Ergebnisse) und eine brauchbare Darstellung auf Laptop-Breite.
@@ -109,3 +109,7 @@ Login/Registrierung, Server-Speicherung, eigene Bildähnlichkeitsberechnung, Bil
 - **Tag 1:** Gerüst, API-Client, Reise-Logik, Hauptbildschirm und Detail-Overlay bis zum Hinzufügen.
 - **Tag 2 Vormittag:** Board, History, Export/Import.
 - **Tag 2 Nachmittag:** Fehler-/Ladezustände, Polishing, Demo-Probe; danach Optional-Liste in Reihenfolge.
+
+## Farben und Logo
+
+Markenfarben: Grün `#0A7A3A` (Hauptaktionen, Kopfzeilen-Linie, Logo-Unterstreichung), Pink `#C2186B` (Fortschritt, Aktiv-Markierung, Zähler), Blau `#0A6FA8` (Neue Reise, Links). Hintergrund `#F4F5F1`, Kacheln `#E8E8E3`, Text `#141414`. Verbindungen im Board: Metadaten blau, Bildähnlichkeit pink. Logo: fett „pool[_______]board“ mit grüner Unterstreichung. Die Farben stehen als Tokens in `src/index.css`.

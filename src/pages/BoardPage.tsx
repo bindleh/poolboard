@@ -36,8 +36,8 @@ function CardNode({ data }: NodeProps<Node<CardData>>) {
   const { item, index } = data;
   return (
     <div
-      className={`w-[200px] bg-white p-2 shadow-sm cursor-pointer ${
-        item.removed ? "border border-dashed border-neutral-400" : "border border-neutral-300"
+      className={`w-[200px] rounded-2xl bg-white p-2 shadow-sm cursor-pointer ${
+        item.removed ? "border-2 border-dashed border-neutral-300" : "border border-neutral-300"
       }`}
     >
       {(Object.keys(POSITIONS) as Side[]).flatMap((side) => [
@@ -45,8 +45,8 @@ function CardNode({ data }: NodeProps<Node<CardData>>) {
         <Handle key={`t${side}`} id={`t-${side}`} type="target" position={POSITIONS[side]} className="!opacity-0" />,
       ])}
       <div className="relative">
-        <ItemImage item={item} className="w-full h-36" />
-        <span className="absolute left-0 top-0 bg-[#1e1e1e] text-white text-[11px] px-1.5 py-0.5">{index + 1}</span>
+        <ItemImage item={item} className="w-full h-36 rounded-xl" />
+        <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-pink text-ink text-[11px] font-medium px-2 py-0.5">{index + 1}</span>
       </div>
       <div className="text-[13px] font-semibold leading-snug mt-2 line-clamp-2">{item.title}</div>
       <div className="text-[11px] text-neutral-500 truncate">{item.removed ? "" : item.institution}</div>
@@ -54,7 +54,9 @@ function CardNode({ data }: NodeProps<Node<CardData>>) {
   );
 }
 
-type EdgeData = { label: string };
+type EdgeData = { label: string; color: string };
+
+const LINK_COLORS = { metadata: "#5cc8f2", image: "#f257ac", unknown: "#a3a3a3" } as const;
 
 function LinkEdge(props: EdgeProps<Edge<EdgeData>>) {
   const [path, labelX, labelY] = getSmoothStepPath({
@@ -67,11 +69,11 @@ function LinkEdge(props: EdgeProps<Edge<EdgeData>>) {
   });
   return (
     <>
-      <BaseEdge id={props.id} path={path} markerEnd={props.markerEnd} style={{ stroke: "#1e1e1e", strokeWidth: 1.5 }} />
+      <BaseEdge id={props.id} path={path} markerEnd={props.markerEnd} style={{ stroke: props.data?.color ?? "#141414", strokeWidth: 2 }} />
       <EdgeLabelRenderer>
         <div
           style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
-          className="absolute max-w-[130px] bg-[#f5f5f5] px-1 py-0.5 text-[10px] leading-tight text-center text-neutral-700 pointer-events-none"
+          className="absolute max-w-[130px] rounded-md bg-paper px-1.5 py-0.5 text-[10px] font-medium leading-tight text-center text-ink pointer-events-none"
         >
           {props.data?.label}
         </div>
@@ -133,15 +135,15 @@ export function BoardPage({ board, onBack, onRename }: Props) {
         target: items[i + 1].id,
         sourceHandle: `s-${sides.source}`,
         targetHandle: `t-${sides.target}`,
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#1e1e1e" },
-        data: { label: linkLabel(link) },
+        markerEnd: { type: MarkerType.ArrowClosed, color: LINK_COLORS[link.kind] },
+        data: { label: linkLabel(link), color: LINK_COLORS[link.kind] },
       };
     });
     return { nodes, edges };
   }, [items, board.links]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-57px)]">
+    <div className="flex flex-col h-[calc(100vh-68px)]">
       <div className="flex flex-wrap items-center gap-3 p-4 border-b border-neutral-300 bg-white">
         <Button onClick={onBack}>← History</Button>
         <input
@@ -153,12 +155,12 @@ export function BoardPage({ board, onBack, onRename }: Props) {
             if (t !== board.title) onRename(t);
           }}
           aria-label="Board-Titel"
-          className="flex-1 min-w-[200px] text-lg font-semibold bg-transparent border-b border-dashed border-neutral-400 focus:outline-none focus:border-[#1e1e1e]"
+          className="flex-1 min-w-[200px] text-xl font-semibold bg-transparent border-b-2 border-dashed border-neutral-300 focus:outline-none focus:border-brand-pink"
         />
         <span className="text-sm text-neutral-500">{board.items.length} Objekte</span>
         <Button onClick={() => downloadFile(exportFilename(), exportBoardsHtml([board]))}>Als HTML exportieren</Button>
       </div>
-      <div className="flex-1 bg-[#f5f5f5]">
+      <div className="flex-1 bg-paper">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -171,7 +173,7 @@ export function BoardPage({ board, onBack, onRename }: Props) {
           onNodeClick={(_, n) => setSelected((n.data as CardData).item)}
           proOptions={{ hideAttribution: true }}
         >
-          <Background gap={24} color="#d4d4d4" />
+          <Background gap={24} color="#d9dad3" />
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>

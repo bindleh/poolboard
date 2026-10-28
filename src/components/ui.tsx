@@ -2,13 +2,26 @@ import { useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import type { Item } from "../types";
 import { mediumImage } from "../util";
 
-type Variant = "primary" | "ghost" | "danger";
+type Variant = "primary" | "dark" | "ghost" | "danger";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-[#1e1e1e] text-white hover:bg-black disabled:bg-neutral-400",
-  ghost: "bg-white text-[#1e1e1e] border border-[#1e1e1e] hover:bg-neutral-100 disabled:opacity-40",
-  danger: "bg-white text-red-700 border border-red-700 hover:bg-red-50 disabled:opacity-40",
+  primary: "bg-brand-green text-ink border-2 border-brand-green hover:brightness-95 disabled:opacity-40",
+  dark: "bg-ink text-white border-2 border-ink hover:bg-black disabled:opacity-40",
+  ghost: "bg-white text-ink border-2 border-ink hover:bg-neutral-100 disabled:opacity-40",
+  danger: "bg-white text-ink border-2 border-brand-pink hover:bg-pink-50 disabled:opacity-40",
 };
+
+/** "pool[______]board": bold wordmark with a green underline. */
+export function Logo({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-block font-extrabold tracking-tight leading-none ${className}`}
+      aria-label="poolboard"
+    >
+      pool[_______]board
+    </span>
+  );
+}
 
 export function Button({
   variant = "ghost",
@@ -18,7 +31,7 @@ export function Button({
   return (
     <button
       {...props}
-      className={`px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
+      className={`rounded-xl px-4 py-2 text-[15px] font-medium transition disabled:cursor-not-allowed ${VARIANTS[variant]} ${className}`}
     />
   );
 }
@@ -35,7 +48,7 @@ export function ItemImage({
   const [failed, setFailed] = useState(false);
   if (item.removed) {
     return (
-      <div className={`flex items-center justify-center bg-neutral-200 text-neutral-500 text-xs text-center p-2 ${className}`}>
+      <div className={`flex items-center justify-center bg-tile text-neutral-500 text-xs text-center p-2 ${className}`}>
         entfernt
       </div>
     );
@@ -47,7 +60,7 @@ export function ItemImage({
       alt={item.title}
       loading="lazy"
       onError={() => setFailed(true)}
-      className={`object-cover bg-neutral-200 ${className}`}
+      className={`object-cover bg-tile ${className}`}
     />
   );
 }
@@ -61,7 +74,7 @@ export function Modal({ children, onClose }: { children: ReactNode; onClose: () 
       aria-modal="true"
     >
       <div
-        className="bg-white max-h-[92vh] w-full max-w-4xl overflow-auto shadow-xl"
+        className="bg-white max-h-[92vh] w-full max-w-4xl overflow-auto rounded-2xl shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -92,7 +105,7 @@ export function ConfirmDialog({
 }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
-      <div className="bg-white max-w-md w-full p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white max-w-md w-full p-6 rounded-2xl shadow-xl" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-2">{title}</h2>
         <p className="text-sm text-neutral-700 mb-5">{text}</p>
         <div className="flex flex-wrap justify-end gap-2">

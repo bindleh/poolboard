@@ -52,19 +52,19 @@ export function HistoryPage({ boards, onOpen, onDelete, onImport }: Props) {
       </div>
 
       {message && (
-        <p className={`text-sm mb-4 ${message.error ? "text-red-700" : "text-green-800"}`} role="status">
+        <p className={`text-sm mb-4 ${message.error ? "text-red-700" : "text-ink"}`} role="status">
           {message.text}
         </p>
       )}
 
       {boards.length === 0 ? (
-        <p className="text-neutral-600 border border-dashed border-neutral-400 bg-white p-8 text-center">
+        <p className="text-neutral-600 rounded-2xl border-2 border-dashed border-neutral-300 bg-white p-8 text-center">
           Noch keine Boards. Starte eine Reise und beende sie, um dein erstes Board zu erstellen.
         </p>
       ) : (
         <ul className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {boards.map((b) => (
-            <li key={b.id} className="bg-white border border-neutral-300 flex flex-col">
+            <li key={b.id} className="bg-white border border-neutral-300 rounded-2xl overflow-hidden flex flex-col">
               <button onClick={() => onOpen(b.id)} className="grid grid-cols-2 gap-px bg-neutral-300" aria-label={`${b.title} öffnen`}>
                 {b.items.slice(0, 4).map((it) => (
                   <ItemImage key={it.id} item={it} className="w-full aspect-[4/3]" />

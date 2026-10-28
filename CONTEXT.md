@@ -40,12 +40,12 @@ _Avoid_: Verlauf, Archiv
 
 ## Relationships
 
-- Eine **Reise** endet durch "Reise beenden" oder automatisch bei 20 **Objekten** und erzeugt dann ein **Board**; auch eine per "Neue Reise" verlassene **Reise** mit mindestens 2 **Objekten** wird als **Board** gespeichert
+- Eine **Reise** endet durch "Reise fertigstellen" oder automatisch bei 20 **Objekten** und erzeugt dann ein **Board**; eine per "Neue Reise" verlassene **Reise** wird verworfen und nicht gespeichert
 - Jedes **Board** liegt in der **History**
 
 - Eine **Reise** beginnt mit genau einem zufälligen **Startobjekt**; dieses kann vor dem ersten Hinzufügen durch ein neues Zufallsobjekt ersetzt werden
-- Eine neue **Reise** kann jederzeit gestartet werden; eine laufende **Reise** mit mindestens 2 **Objekten** wird dabei nach Rückfrage in der **History** gespeichert
-- Zu jedem gewählten **Objekt** gibt es 10 **Metadaten-Vorschläge** und 10 **Bild-Vorschläge**
+- Eine neue **Reise** kann jederzeit gestartet werden, auch mit einem per Suche gewählten **Startobjekt**; eine laufende **Reise** wird dabei nach Rückfrage verworfen
+- Zu jedem gewählten **Objekt** gibt es 15 **Metadaten-Vorschläge** und 10 **Bild-Vorschläge**
 - Bereits hinzugefügte oder schon angezeigte **Objekte** erscheinen nicht erneut als **Vorschlag**
 - Jedes hinzugefügte **Objekt** (außer dem **Startobjekt**) hat genau eine **Verbindung** zu seinem Vorgänger in der **Reise**
 

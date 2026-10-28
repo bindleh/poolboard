@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { defaultBoardTitle, isSavable, MAX_ITEMS } from "./journey/journey";
 import { SearchDialog } from "./components/SearchDialog";
-import { Button, ConfirmDialog } from "./components/ui";
+import { Button, ConfirmDialog, Logo } from "./components/ui";
 import { BoardPage } from "./pages/BoardPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { JourneyPage } from "./pages/JourneyPage";
@@ -77,18 +77,18 @@ export default function App() {
   const board = page.name === "board" ? boards.find((b) => b.id === page.id) : undefined;
 
   const navClass = (active: boolean) =>
-    `px-3 py-1.5 text-sm font-medium border-b-2 ${active ? "border-[#1e1e1e]" : "border-transparent text-neutral-500 hover:text-black"}`;
+    `px-1 py-1 text-lg font-medium border-b-4 ${active ? "border-brand-pink text-ink" : "border-transparent text-neutral-500 hover:text-ink"}`;
 
   return (
     <>
-      <header className="bg-white border-b border-neutral-300">
-        <nav className="max-w-7xl mx-auto px-4 md:px-6 flex items-center gap-2 h-[56px]">
-          <span className="font-bold text-lg mr-6">Poolboard</span>
+      <header className="bg-white border-b-4 border-brand-green">
+        <nav className="max-w-7xl mx-auto px-4 md:px-6 flex items-center gap-3 h-[64px]">
+          <Logo className="text-xl mr-4 hidden sm:inline-block" />
           <button className={navClass(page.name === "journey")} onClick={() => setPage({ name: "journey" })}>
             Reise
           </button>
           <button className={navClass(page.name !== "journey")} onClick={() => setPage({ name: "history" })}>
-            History ({boards.length})
+            History <span className="ml-1.5 inline-block rounded-full bg-brand-pink px-2.5 py-0.5 text-base text-ink align-middle">{boards.length}</span>
           </button>
           <form
             className="ml-auto flex gap-2"
@@ -104,7 +104,7 @@ export default function App() {
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Suche: Text oder Objekt-ID"
               aria-label="Suche nach Text oder Objekt-ID"
-              className="w-40 sm:w-72 border border-neutral-400 bg-white px-2 py-1.5 text-sm focus:outline-2 focus:outline-[#0066cc]"
+              className="w-40 sm:w-72 rounded-xl border-2 border-ink bg-white px-3 py-2 text-[15px]"
             />
             <Button type="submit" variant="primary">
               Suchen

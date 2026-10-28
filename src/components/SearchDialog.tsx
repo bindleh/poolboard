@@ -104,7 +104,7 @@ export function SearchDialog({ query, onClose, onStart }: Props) {
               {state.items.map((it) => (
                 <li key={it.id}>
                   <button onClick={() => setSelected(it)} className="block w-full text-left group">
-                    <ItemImage item={it} className="w-full aspect-square group-hover:opacity-90" />
+                    <ItemImage item={it} className="w-full aspect-square rounded-xl group-hover:opacity-90" />
                     <div className="text-sm font-medium leading-snug mt-1 line-clamp-2">{it.title}</div>
                     <div className="text-xs text-neutral-500 truncate">{it.institution}</div>
                   </button>
