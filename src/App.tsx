@@ -82,7 +82,7 @@ export default function App() {
   return (
     <>
       <header className="bg-white border-b-4 border-brand-green">
-        <nav className="max-w-7xl mx-auto px-4 md:px-6 flex items-center gap-3 h-[64px]">
+        <nav className="max-w-[1920px] mx-auto px-3 md:px-4 flex items-center gap-3 h-[64px]">
           <button className="mr-4 hidden sm:block cursor-pointer" aria-label="Zum Board" onClick={() => setPage({ name: "journey" })}>
             <Logo className="h-10" />
           </button>

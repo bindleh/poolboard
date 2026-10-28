@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ItemDetail } from "../components/ItemDetail";
 import { METADATA_TOTAL } from "../api/metadataQueries";
 import { Button, ConfirmDialog, ItemImage } from "../components/ui";
@@ -21,61 +21,145 @@ interface Selected {
   suggestion?: Suggestion;
 }
 
-const ROW_TITLES: Record<LinkKind, { title: string; hint: string }> = {
-  metadata: { title: "Inhaltlich ähnlich", hint: "gleiche Themen, Künstler:innen, Orte oder Zeiten" },
-  image: { title: "Optisch ähnlich", hint: "Bilder, die ähnlich aussehen" },
-};
+/** Height/width ratios for the masonry tiles; picked per item so the layout stays stable. */
+const TILE_RATIOS = [1, 1.25, 0.8, 1.5, 0.75, 1.15, 0.9, 1.35];
 
-function SuggestionRow({
-  kind,
-  row,
+function hash(text: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+interface Tile {
+  suggestion: Suggestion;
+  kind: LinkKind;
+}
+
+/** Interleaves both suggestion kinds in a stable pseudo-random order (seeded, so rerenders do not reshuffle). */
+function mixTiles(rows: Record<LinkKind, RowState>): Tile[] {
+  const seen = new Set<string>();
+  const tiles: Tile[] = [];
+  for (const kind of ["metadata", "image"] as const) {
+    const row = rows[kind];
+    if (row.status !== "ok") continue;
+    for (const suggestion of row.suggestions) {
+      if (seen.has(suggestion.item.id)) continue;
+      seen.add(suggestion.item.id);
+      tiles.push({ suggestion, kind });
+    }
+  }
+  return tiles.sort((x, y) => hash(x.suggestion.item.id) - hash(y.suggestion.item.id));
+}
+
+/** Tile that takes the image's own proportions once loaded (clamped for extreme formats), so little gets cropped. */
+function SuggestionTile({ tile, onSelect }: { tile: Tile; onSelect: (tile: Tile) => void }) {
+  const { item } = tile.suggestion;
+  const [ratio, setRatio] = useState<number | null>(null);
+  const placeholder = 1 / TILE_RATIOS[hash(item.id + "r") % TILE_RATIOS.length];
+  return (
+    <button
+      onClick={() => onSelect(tile)}
+      title={item.title}
+      className="group relative mb-2 block w-full break-inside-avoid overflow-hidden rounded-xl bg-tile"
+      style={{ aspectRatio: ratio ?? placeholder }}
+    >
+      <ItemImage
+        item={item}
+        onLoad={(img) => {
+          if (img.naturalWidth && img.naturalHeight) {
+            setRatio(Math.min(2, Math.max(0.5, img.naturalWidth / img.naturalHeight)));
+          }
+        }}
+        className="w-full h-full object-top transition-transform group-hover:scale-105"
+      />
+    </button>
+  );
+}
+
+function SuggestionGrid({
+  rows,
   onSelect,
   onRetry,
 }: {
-  kind: LinkKind;
-  row: RowState;
-  onSelect: (s: Suggestion) => void;
+  rows: Record<LinkKind, RowState>;
+  onSelect: (tile: Tile) => void;
   onRetry: () => void;
 }) {
-  const { title, hint } = ROW_TITLES[kind];
+  const tiles = useMemo(() => mixTiles(rows), [rows]);
+  const loading = rows.metadata.status === "loading" || rows.image.status === "loading";
+  const errors = (["metadata", "image"] as const).flatMap((k) => {
+    const r = rows[k];
+    return r.status === "error" ? [r.message] : [];
+  });
+  const columns = "columns-3 xl:columns-4 2xl:columns-5 gap-2";
+
   return (
-    <section>
-      <h2 className="text-lg font-semibold mb-2" title={hint}>
-        {title}
-      </h2>
-      {row.status === "loading" && (
-        <div className="grid grid-cols-5 gap-2" aria-busy="true">
-          {Array.from({ length: kind === "metadata" ? METADATA_TOTAL : SUGGESTIONS_PER_MODE }, (_, i) => (
-            <div key={i} className="aspect-square rounded-xl bg-tile animate-pulse" />
-          ))}
-        </div>
-      )}
-      {row.status === "error" && (
+    <section className="space-y-3">
+      <h2 className="text-lg font-semibold">Ähnliche Objekte</h2>
+      {errors.length > 0 && (
         <div className="rounded-2xl border-2 border-dashed border-neutral-300 bg-white p-4 text-sm flex items-center justify-between gap-3">
-          <span>{row.message}</span>
+          <span>{errors.join(" ")}</span>
           <Button onClick={onRetry}>Erneut versuchen</Button>
         </div>
       )}
-      {row.status === "ok" && row.suggestions.length === 0 && (
+      {loading && tiles.length === 0 && (
+        <div className={columns} aria-busy="true">
+          {Array.from({ length: METADATA_TOTAL + SUGGESTIONS_PER_MODE }, (_, i) => (
+            <div
+              key={i}
+              className="mb-2 break-inside-avoid rounded-xl bg-tile animate-pulse"
+              style={{ aspectRatio: 1 / TILE_RATIOS[i % TILE_RATIOS.length] }}
+            />
+          ))}
+        </div>
+      )}
+      {!loading && errors.length === 0 && tiles.length === 0 && (
         <p className="text-sm text-neutral-600 rounded-2xl border-2 border-dashed border-neutral-300 bg-white p-4">
           Keine weiteren Vorschläge gefunden.
         </p>
       )}
-      {row.status === "ok" && row.suggestions.length > 0 && (
-        <div className="grid grid-cols-5 gap-2">
-          {row.suggestions.map((s) => (
-            <button
-              key={s.item.id}
-              onClick={() => onSelect(s)}
-              title={s.item.title}
-              className="group relative aspect-square overflow-hidden rounded-xl bg-tile"
-            >
-              <ItemImage item={s.item} className="w-full h-full transition-transform group-hover:scale-105" />
-            </button>
+      {tiles.length > 0 && (
+        <div className={columns}>
+          {tiles.map((t) => (
+            <SuggestionTile key={t.suggestion.item.id} tile={t} onSelect={onSelect} />
           ))}
         </div>
       )}
     </section>
+  );
+}
+
+/** The first item plus the last STRIP_TAIL items; an ellipsis marks hidden items in between. */
+const STRIP_TAIL = 9;
+
+function JourneyStrip({ items, onSelect }: { items: Item[]; onSelect: (item: Item) => void }) {
+  const indexed = items.map((item, index) => ({ item, index }));
+  const tail = indexed.slice(Math.max(1, items.length - STRIP_TAIL));
+  const hidden = items.length - 1 - tail.length > 0;
+  const shown = [indexed[0], ...tail];
+
+  return (
+    <ol className="flex items-center gap-2 min-w-0" aria-label="Meine Reise">
+      {shown.map(({ item, index }) => (
+        <li key={item.id} className="flex items-center gap-2 shrink-0">
+          {hidden && index === tail[0].index && (
+            <span className="text-neutral-500 text-lg leading-none" title={`${items.length - 1 - tail.length} weitere Objekte`}>
+              …
+            </span>
+          )}
+          <button
+            onClick={() => onSelect(item)}
+            title={item.title}
+            className={`relative block w-12 h-12 overflow-hidden rounded-lg cursor-pointer ${index === items.length - 1 ? "ring-2 ring-brand-pink ring-offset-2" : ""}`}
+          >
+            <ItemImage item={item} className="w-full h-full object-top" />
+            <span className="absolute left-0.5 top-0.5 rounded-full bg-brand-pink text-ink text-[10px] font-medium px-1">
+              {index + 1}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -107,13 +191,24 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
   const handleNew = () => (isSavable(state) ? setConfirmNew(true) : onNewJourney());
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="max-w-[1920px] mx-auto p-3 md:p-4 space-y-6">
       {startError && <p className="text-sm text-red-700">{startError}</p>}
 
-      <div className="flex flex-wrap items-center gap-3">
-        {onlyStart ? (
-          <Button onClick={startRandom} disabled={starting}>
-            {starting ? "Lädt …" : "Anderes Zufallsobjekt"}
+      <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-3 items-center">
+        <div className="flex flex-wrap items-center gap-3">
+          {onlyStart ? (
+            <Button onClick={startRandom} disabled={starting}>
+              {starting ? "Lädt …" : "Anderes Zufallsobjekt"}
+            </Button>
+          ) : (
+            <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
+          )}
+          <Button onClick={handleNew}>Neue Reise</Button>
+        </div>
+        <div className="flex items-center gap-3 min-w-0">
+          <JourneyStrip items={state.items} onSelect={(item) => setSelected({ item })} />
+          <Button variant="dark" className="ml-auto shrink-0 whitespace-nowrap" onClick={onFinish} disabled={onlyStart}>
+            Reise fertigstellen
           </Button>
         ) : (
           <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
@@ -124,7 +219,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         </Button>
       </div>
 
-      <div className="grid lg:grid-cols-[340px_1fr] gap-x-8 gap-y-5">
+      <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-5">
         <div className="space-y-4">
           <div>
             <div className="text-lg font-medium">
@@ -141,7 +236,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
               className="block w-full overflow-hidden rounded-xl"
               aria-label="Details zum aktuellen Objekt"
             >
-              <ItemImage item={current} size="medium" className="w-full aspect-[4/3] !object-contain" />
+              <ItemImage item={current} size="medium" className="w-full aspect-square !object-contain" />
             </button>
             <h1 className="text-2xl font-semibold mt-4 leading-snug">{current.title}</h1>
             <dl className="text-[15px] text-neutral-600 mt-2 space-y-0.5">
@@ -161,15 +256,11 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         </div>
 
         <div className="space-y-6">
-          {(["metadata", "image"] as const).map((kind) => (
-            <SuggestionRow
-              key={kind}
-              kind={kind}
-              row={rows[kind]}
-              onRetry={retry}
-              onSelect={(s) => setSelected({ item: s.item, kind, suggestion: s })}
-            />
-          ))}
+          <SuggestionGrid
+            rows={rows}
+            onRetry={retry}
+            onSelect={(t) => setSelected({ item: t.suggestion.item, kind: t.kind, suggestion: t.suggestion })}
+          />
         </div>
       </div>
 

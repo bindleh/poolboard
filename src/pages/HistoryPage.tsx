@@ -32,7 +32,7 @@ export function HistoryPage({ boards, onOpen, onDelete, onImport }: Props) {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6">
+    <div className="max-w-[1920px] mx-auto p-3 md:p-4">
       <div className="flex flex-wrap items-center gap-3 mb-5">
         <h1 className="text-2xl font-semibold mr-auto">History</h1>
         <input
