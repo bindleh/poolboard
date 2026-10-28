@@ -112,6 +112,40 @@ function SuggestionGrid({
   );
 }
 
+/** The first item plus the last STRIP_TAIL items; an ellipsis marks hidden items in between. */
+const STRIP_TAIL = 5;
+
+function JourneyStrip({ items, onSelect }: { items: Item[]; onSelect: (item: Item) => void }) {
+  const indexed = items.map((item, index) => ({ item, index }));
+  const tail = indexed.slice(Math.max(1, items.length - STRIP_TAIL));
+  const hidden = items.length - 1 - tail.length > 0;
+  const shown = [indexed[0], ...tail];
+
+  return (
+    <ol className="flex items-center gap-2 min-w-0" aria-label="Meine Reise">
+      {shown.map(({ item, index }) => (
+        <li key={item.id} className="flex items-center gap-2 shrink-0">
+          {hidden && index === tail[0].index && (
+            <span className="text-neutral-500 text-lg leading-none" title={`${items.length - 1 - tail.length} weitere Objekte`}>
+              …
+            </span>
+          )}
+          <button
+            onClick={() => onSelect(item)}
+            title={item.title}
+            className={`relative block w-12 h-12 overflow-hidden rounded-lg cursor-pointer ${index === items.length - 1 ? "ring-2 ring-brand-pink ring-offset-2" : ""}`}
+          >
+            <ItemImage item={item} className="w-full h-full" />
+            <span className="absolute left-0.5 top-0.5 rounded-full bg-brand-pink text-ink text-[10px] font-medium px-1">
+              {index + 1}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
   const { state, current, rows, starting, startError, startRandom, add, undo, retry } = journey;
   const [selected, setSelected] = useState<Selected | null>(null);
@@ -143,18 +177,23 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
     <div className="max-w-[1920px] mx-auto p-3 md:p-4 space-y-6">
       {startError && <p className="text-sm text-red-700">{startError}</p>}
 
-      <div className="flex flex-wrap items-center gap-3">
-        {onlyStart ? (
-          <Button onClick={startRandom} disabled={starting}>
-            {starting ? "Lädt …" : "Anderes Zufallsobjekt"}
+      <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-3 items-center">
+        <div className="flex flex-wrap items-center gap-3">
+          {onlyStart ? (
+            <Button onClick={startRandom} disabled={starting}>
+              {starting ? "Lädt …" : "Anderes Zufallsobjekt"}
+            </Button>
+          ) : (
+            <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
+          )}
+          <Button onClick={handleNew}>Neue Reise</Button>
+        </div>
+        <div className="flex items-center gap-3 min-w-0">
+          <JourneyStrip items={state.items} onSelect={(item) => setSelected({ item })} />
+          <Button variant="dark" className="ml-auto shrink-0 whitespace-nowrap" onClick={onFinish} disabled={onlyStart}>
+            Reise fertigstellen
           </Button>
-        ) : (
-          <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
-        )}
-        <Button onClick={handleNew}>Neue Reise</Button>
-        <Button variant="dark" className="ml-auto" onClick={onFinish} disabled={onlyStart}>
-          Reise fertigstellen
-        </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-5">
@@ -201,24 +240,6 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
           />
         </div>
       </div>
-
-      <section>
-        <h2 className="text-sm font-semibold mb-2 text-neutral-600">Meine Reise</h2>
-        <ol className="flex gap-2 overflow-x-auto pb-2">
-          {state.items.map((it, i) => (
-            <li key={it.id} className="shrink-0 w-20">
-              <button
-                onClick={() => setSelected({ item: it })}
-                title={it.title}
-                className={`relative block w-20 h-20 overflow-hidden rounded-xl ${i === count - 1 ? "ring-2 ring-brand-pink ring-offset-2" : ""}`}
-              >
-                <ItemImage item={it} className="w-full h-full" />
-                <span className="absolute left-1 top-1 rounded-full bg-brand-pink text-ink text-[10px] font-medium px-1.5">{i + 1}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </section>
 
       {selected && (
         <ItemDetail
