@@ -210,7 +210,13 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
           <Button variant="dark" className="ml-auto shrink-0 whitespace-nowrap" onClick={onFinish} disabled={onlyStart}>
             Reise fertigstellen
           </Button>
-        </div>
+        ) : (
+          <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
+        )}
+        <Button onClick={handleNew}>Neues Board</Button>
+        <Button variant="dark" className="ml-auto" onClick={onFinish} disabled={onlyStart}>
+          Board fertigstellen
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-5">
@@ -258,6 +264,24 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         </div>
       </div>
 
+      <section>
+        <h2 className="text-sm font-semibold mb-2 text-neutral-600">Mein Board bisher</h2>
+        <ol className="flex gap-2 overflow-x-auto pb-2">
+          {state.items.map((it, i) => (
+            <li key={it.id} className="shrink-0 w-20">
+              <button
+                onClick={() => setSelected({ item: it })}
+                title={it.title}
+                className={`relative block w-20 h-20 overflow-hidden rounded-xl ${i === count - 1 ? "ring-2 ring-brand-pink ring-offset-2" : ""}`}
+              >
+                <ItemImage item={it} className="w-full h-full" />
+                <span className="absolute left-1 top-1 rounded-full bg-brand-pink text-ink text-[10px] font-medium px-1.5">{i + 1}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       {selected && (
         <ItemDetail
           item={selected.item}
@@ -271,7 +295,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
                   setSelected(null);
                 }}
               >
-                Zur Reise hinzufügen
+                Zum Board hinzufügen
               </Button>
             ) : undefined
           }
@@ -280,8 +304,8 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
 
       {confirmNew && (
         <ConfirmDialog
-          title="Neue Reise starten?"
-          text="Die aktuelle Reise wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          title="Neues Board starten?"
+          text="Das aktuelle Board wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
           confirmLabel="Verwerfen und neu starten"
           danger
           onCancel={() => setConfirmNew(false)}

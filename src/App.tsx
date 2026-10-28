@@ -83,14 +83,14 @@ export default function App() {
     <>
       <header className="bg-white border-b-4 border-brand-green">
         <nav className="max-w-[1920px] mx-auto px-3 md:px-4 flex items-center gap-3 h-[64px]">
-          <button className="mr-4 hidden sm:block cursor-pointer" aria-label="Zur Reise" onClick={() => setPage({ name: "journey" })}>
+          <button className="mr-4 hidden sm:block cursor-pointer" aria-label="Zum Board" onClick={() => setPage({ name: "journey" })}>
             <Logo className="h-10" />
           </button>
           <button className={navClass(page.name === "journey") } onClick={() => setPage({ name: "journey" })}>
-            Reise
+            Eintauchen
           </button>
           <button className={navClass(page.name !== "journey")} onClick={() => setPage({ name: "history" })}>
-            History <span className="ml-1.5 inline-block rounded-full bg-brand-pink px-2.5 py-0.5 text-base text-ink align-middle">{boards.length}</span>
+            Meine Boards <span className="ml-1.5 inline-block rounded-full bg-brand-pink px-2.5 py-0.5 text-base text-ink align-middle">{boards.length}</span>
           </button>
           <form
             className="ml-auto flex gap-2"
@@ -150,8 +150,8 @@ export default function App() {
 
       {pendingStart && (
         <ConfirmDialog
-          title="Neue Reise mit diesem Objekt starten?"
-          text="Die aktuelle Reise wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          title="Neues Board mit diesem Objekt starten?"
+          text="Das aktuelle Board wird verworfen und nicht in der Sammlung gespeichert. Zum Speichern vorher „Board beenden“ wählen."
           confirmLabel="Verwerfen und neu starten"
           danger
           onCancel={() => setPendingStart(null)}

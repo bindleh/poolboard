@@ -59,7 +59,7 @@ export function HistoryPage({ boards, onOpen, onDelete, onImport }: Props) {
 
       {boards.length === 0 ? (
         <p className="text-neutral-600 rounded-2xl border-2 border-dashed border-neutral-300 bg-white p-8 text-center">
-          Noch keine Boards. Starte eine Reise und beende sie, um dein erstes Board zu erstellen.
+          Noch keine Boards. Tauch ein, um dein erstes Board zu erstellen.
         </p>
       ) : (
         <ul className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -93,7 +93,7 @@ export function HistoryPage({ boards, onOpen, onDelete, onImport }: Props) {
       {toDelete && (
         <ConfirmDialog
           title="Board löschen?"
-          text={`„${toDelete.title}“ wird aus der History entfernt.`}
+          text={`„${toDelete.title}“ wird aus meinen Boards entfernt.`}
           confirmLabel="Löschen"
           danger
           onCancel={() => setToDelete(null)}
