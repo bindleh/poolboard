@@ -258,24 +258,6 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         </div>
       </div>
 
-      <section>
-        <h2 className="text-sm font-semibold mb-2 text-neutral-600">Mein Board bisher</h2>
-        <ol className="flex gap-2 overflow-x-auto pb-2">
-          {state.items.map((it, i) => (
-            <li key={it.id} className="shrink-0 w-20">
-              <button
-                onClick={() => setSelected({ item: it })}
-                title={it.title}
-                className={`relative block w-20 h-20 overflow-hidden rounded-xl ${i === count - 1 ? "ring-2 ring-brand-pink ring-offset-2" : ""}`}
-              >
-                <ItemImage item={it} className="w-full h-full" />
-                <span className="absolute left-1 top-1 rounded-full bg-brand-pink text-ink text-[10px] font-medium px-1.5">{i + 1}</span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </section>
-
       {selected && (
         <ItemDetail
           item={selected.item}
