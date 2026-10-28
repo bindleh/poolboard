@@ -203,7 +203,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
           ) : (
             <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
           )}
-          <Button onClick={handleNew}>Neues Board</Button>
+          {!onlyStart && <Button onClick={handleNew}>Neues Board</Button>}
         </div>
         <div className="flex items-center gap-3 min-w-0">
           <JourneyStrip items={state.items} onSelect={(item) => setSelected({ item })} />
