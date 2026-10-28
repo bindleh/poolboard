@@ -5,7 +5,7 @@ import { exportBoardsHtml, importBoardsHtml } from "./kulturpoolHtml";
 
 const board: Board = {
   id: "b1",
-  title: 'Meine "Reise" <1>',
+  title: 'Mein "Board" <1>',
   createdAt: "2026-10-27T10:00:00.000Z",
   items: ["a", "b", "c"].map((id) => ({
     id,

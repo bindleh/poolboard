@@ -150,8 +150,8 @@ export default function App() {
 
       {pendingStart && (
         <ConfirmDialog
-          title="Neue Reise mit diesem Objekt starten?"
-          text="Die aktuelle Reise wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          title="Neues Board mit diesem Objekt starten?"
+          text="Das aktuelle Board wird verworfen und nicht in der Sammlung gespeichert. Zum Speichern vorher „Board beenden“ wählen."
           confirmLabel="Verwerfen und neu starten"
           danger
           onCancel={() => setPendingStart(null)}

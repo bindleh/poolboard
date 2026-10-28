@@ -118,9 +118,9 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
         ) : (
           <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
         )}
-        <Button onClick={handleNew}>Neue Reise</Button>
+        <Button onClick={handleNew}>Neues Board</Button>
         <Button variant="dark" className="ml-auto" onClick={onFinish} disabled={onlyStart}>
-          Reise fertigstellen
+          Board fertigstellen
         </Button>
       </div>
 
@@ -174,7 +174,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
       </div>
 
       <section>
-        <h2 className="text-sm font-semibold mb-2 text-neutral-600">Meine Reise</h2>
+        <h2 className="text-sm font-semibold mb-2 text-neutral-600">Mein Board bisher</h2>
         <ol className="flex gap-2 overflow-x-auto pb-2">
           {state.items.map((it, i) => (
             <li key={it.id} className="shrink-0 w-20">
@@ -204,7 +204,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
                   setSelected(null);
                 }}
               >
-                Zur Reise hinzufügen
+                Zum Board hinzufügen
               </Button>
             ) : undefined
           }
@@ -213,8 +213,8 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
 
       {confirmNew && (
         <ConfirmDialog
-          title="Neue Reise starten?"
-          text="Die aktuelle Reise wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          title="Neues Board starten?"
+          text="Das aktuelle Board wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
           confirmLabel="Verwerfen und neu starten"
           danger
           onCancel={() => setConfirmNew(false)}

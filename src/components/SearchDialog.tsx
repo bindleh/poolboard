@@ -65,7 +65,7 @@ export function SearchDialog({ query, onClose, onStart }: Props) {
 
   const startAction = (item: Item) => (
     <Button variant="primary" onClick={() => onStart(item)}>
-      Als Start der Reise verwenden
+      Als Start des Boards verwenden
     </Button>
   );
 
