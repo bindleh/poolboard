@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #0df205;
+  --color-brand-pink: #ff45de;
+  --color-brand-blue: #5cc8f2;
+  --color-paper: #ffffff;
+  --color-tile: #e8e8e3;
+  --color-ink: #141414;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+  outline-offset: 2px;
+}
+
+/* Restrained, grayscale basemap; keep markers and controls unaffected. */
+.kulturpool-map .leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.92) brightness(1.03);
+}
+
+/* Keep the map popup consistent with the application palette. */
+.kulturpool-map .leaflet-popup-content-wrapper,
+.kulturpool-map .leaflet-popup-tip {
+  background: #ffffff;
+  color: #141414;
+}
+
+.kulturpool-map .leaflet-popup-content {
+  margin: 12px;
+}
+
+.kulturpool-map .leaflet-control-zoom a {
+  color: #141414;
+  border-color: #e8e8e3;
+}
+
+.kulturpool-map .leaflet-control-attribution {
+  font-size: 10px;
+}
