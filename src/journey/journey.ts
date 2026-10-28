@@ -120,8 +120,6 @@ export function isSavable(state: JourneyState): boolean {
   return state.items.length >= 2;
 }
 
-export function defaultBoardTitle(state: JourneyState, date = new Date()): string {
-  const first = state.items[0]?.title ?? "Reise";
-  const short = first.length > 40 ? `${first.slice(0, 37)}…` : first;
-  return `${short} · ${date.toLocaleDateString("de-AT")}`;
+export function defaultBoardTitle(_state: JourneyState, _date = new Date()): string {
+  return "Unbenanntes Board";
 }

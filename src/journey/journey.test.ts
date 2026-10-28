@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Item, Link, Suggestion } from "../types";
-import { emptyJourney, journeyReducer, MAX_ITEMS, pickSuggestions } from "./journey";
+import { defaultBoardTitle, emptyJourney, journeyReducer, MAX_ITEMS, pickSuggestions } from "./journey";
 import { normalizeName, sharedFields } from "./shared";
 
 const item = (id: string, over: Partial<Item> = {}): Item => ({
@@ -51,6 +51,13 @@ describe("journeyReducer", () => {
     expect(s.items.map((i) => i.id)).toEqual(["a"]);
     expect(s.links).toHaveLength(0);
     expect(journeyReducer(s, { type: "undo" }).items).toHaveLength(1);
+  });
+});
+
+describe("defaultBoardTitle", () => {
+  it("uses the fixed default board title instead of the first item title", () => {
+    const state = { items: [item("a", { title: "Erstes Objekt" })], links: [], seen: ["a"] };
+    expect(defaultBoardTitle(state)).toBe("Unbenanntes Board");
   });
 });
 
