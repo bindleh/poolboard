@@ -11,7 +11,7 @@ import { useJourney } from "./useJourney";
 
 type Page = { name: "landing" } | { name: "journey" } | { name: "history" } | { name: "board"; id: string };
 
-function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHistory: () => void }) {
+function LandingPage({ onStart }: { onStart: () => void }) {
   const slides = [
     {
       title: "1. Starte mit einem Bild",
@@ -32,7 +32,7 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
     },
     {
       title: "4. Reise beenden",
-      text: "Wenn du zufrieden bist mit deiner Sammlung, klicke auf Board fertigstellen“, um dein Board zu speichern.",
+      text: "Wenn du zufrieden bist mit deiner Sammlung, klicke auf “Board fertigstellen“, um dein Board zu speichern.",
       image: "/Schritt-4.png",
       isScreenshot: true,
     },
@@ -63,8 +63,12 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
   return (
     <main className="mx-auto max-w-5xl px-6 py-14 md:py-20">
       <div className="rounded-[28px] border-4 border-brand-green bg-white p-8 shadow-sm md:p-12">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-pink">pool_board</p>
-        <h1 className="mt-4 text-4xl font-black leading-tight text-ink md:text-5xl">Willkommen zu pool_board!</h1>
+        <h1 className="flex flex-wrap items-center gap-x-4 gap-y-2 text-4xl font-black leading-tight text-ink md:text-5xl">
+          Willkommen zu
+          <span className="flex items-center">
+            <Logo className="h-12 md:h-16" />!
+          </span>
+        </h1>
         <p className="mt-6 max-w-3xl text-lg leading-relaxed text-neutral-700">
           Deine personalisierte Expedition durch die{" "}
           <a
@@ -94,7 +98,7 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
                         type="button"
                         onClick={() => setActiveSlide((current) => Math.max(current - 1, 0))}
                         disabled={activeSlide === 0}
-                        className="rounded-lg border-2 border-ink px-3 py-1.5 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                        className="cursor-pointer rounded-lg border-2 border-ink px-3 py-1.5 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Zurück
                       </button>
@@ -102,7 +106,7 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
                         type="button"
                         onClick={() => setActiveSlide((current) => Math.min(current + 1, slides.length - 1))}
                         disabled={activeSlide === slides.length - 1}
-                        className="rounded-lg bg-brand-pink px-3 py-1.5 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                        className="cursor-pointer rounded-lg bg-brand-pink px-3 py-1.5 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         Weiter
                       </button>
@@ -168,7 +172,7 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
                     <button
                       type="button"
                       onClick={() => setActiveSlide((current) => Math.max(current - 1, 0))}
-                      className="rounded-lg border-2 border-ink px-3 py-1.5 text-sm font-medium text-ink"
+                      className="cursor-pointer rounded-lg border-2 border-ink px-3 py-1.5 text-sm font-medium text-ink"
                     >
                       Zurück
                     </button>
@@ -178,7 +182,7 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
                     type="button"
                     onClick={onStart}
                     className="group relative flex min-h-[320px] w-full items-center justify-center overflow-hidden rounded-[22px] bg-white p-0 text-center transition cursor-pointer shadow-[0_10px_24px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.12)]"
-                    aria-label="Reise starten"
+                    aria-label="Eintauchen"
                     style={{
                       backgroundImage: "url('/spring-rein.png')",
                       backgroundSize: "cover",
@@ -191,13 +195,6 @@ function LandingPage({ onStart, onOpenHistory }: { onStart: () => void; onOpenHi
               )}
             </div>
           </div>
-        </div>
-
-        <div className="mt-8 flex flex-wrap gap-4">
-          <Button variant="primary" onClick={onStart}>
-            Reise starten
-          </Button>
-          <Button onClick={onOpenHistory}>History ansehen</Button>
         </div>
       </div>
     </main>
@@ -267,6 +264,11 @@ export default function App() {
     if (page.name === "journey" && state.items.length >= MAX_ITEMS) finish();
   }, [page.name, state.items.length, finish]);
 
+  // A new page always starts at the top.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [page]);
+
   const board = page.name === "board" ? boards.find((b) => b.id === page.id) : undefined;
 
   const navClass = (active: boolean) =>
@@ -282,9 +284,6 @@ export default function App() {
             onClick={() => setPage({ name: "landing" })}
           >
             <Logo className="h-10" />
-          </button>
-          <button className={navClass(page.name === "landing")} onClick={() => setPage({ name: "landing" })}>
-            Start
           </button>
           <button className={navClass(page.name === "journey")} onClick={() => setPage({ name: "journey" })}>
             Eintauchen
@@ -324,7 +323,6 @@ export default function App() {
       {page.name === "landing" && (
         <LandingPage
           onStart={() => setPage({ name: "journey" })}
-          onOpenHistory={() => setPage({ name: "history" })}
         />
       )}
 
