@@ -55,9 +55,22 @@ describe("journeyReducer", () => {
 });
 
 describe("defaultBoardTitle", () => {
-  it("uses the fixed default board title instead of the first item title", () => {
-    const state = { items: [item("a", { title: "Erstes Objekt" })], links: [], seen: ["a"] };
-    expect(defaultBoardTitle(state)).toBe("Unbenanntes Board");
+  const date = new Date(2026, 9, 28);
+
+  it("uses the date and the title of the first item", () => {
+    const state = { items: [item("a", { title: "Erstes Objekt" }), item("b")], links: [], seen: ["a", "b"] };
+    expect(defaultBoardTitle(state, date)).toBe("28.10.2026 – Erstes Objekt");
+  });
+
+  it("shortens very long titles", () => {
+    const state = { items: [item("a", { title: "x".repeat(100) })], links: [], seen: ["a"] };
+    const title = defaultBoardTitle(state, date);
+    expect(title.endsWith("…")).toBe(true);
+    expect(title.length).toBeLessThan(80);
+  });
+
+  it("falls back to a fixed title without items", () => {
+    expect(defaultBoardTitle({ items: [], links: [], seen: [] }, date)).toBe("Unbenanntes Board");
   });
 });
 

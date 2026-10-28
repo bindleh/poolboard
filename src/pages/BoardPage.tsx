@@ -23,7 +23,7 @@ import { ItemDetail } from "../components/ItemDetail";
 import { Button, ItemImage } from "../components/ui";
 import { edgeSides, snakeSlots, type Side } from "../journey/layout";
 import { exportBoardsHtml, exportFilename } from "../exchange/kulturpoolHtml";
-import type { Board, Item } from "../types";
+import type { Board, BoardIntroduction, Item } from "../types";
 import { downloadFile, linkLabel } from "../util";
 
 const POSITIONS: Record<Side, Position> = {
@@ -153,16 +153,16 @@ interface Props {
   board: Board;
   onBack: () => void;
   onRename: (title: string) => void;
+  onIntroChange: (language: string, introduction: BoardIntroduction) => void;
 }
 
 type BoardView = "board" | "map";
 
-export function BoardPage({ board, onBack, onRename }: Props) {
+export function BoardPage({ board, onBack, onRename, onIntroChange }: Props) {
   const [items, setItems] = useState<Item[]>(board.items);
   const [selected, setSelected] = useState<Item | null>(null);
   const [title, setTitle] = useState(board.title);
   const [view, setView] = useState<BoardView>("board");
-  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     setItems(board.items);
@@ -291,10 +291,6 @@ export function BoardPage({ board, onBack, onRename }: Props) {
           </button>
         </div>
 
-        <Button onClick={() => setShowIntro((v) => !v)} aria-expanded={showIntro}>
-          Einleitung
-        </Button>
-
         <Button
           onClick={() =>
             downloadFile(exportFilename(), exportBoardsHtml([board]))
@@ -304,7 +300,7 @@ export function BoardPage({ board, onBack, onRename }: Props) {
         </Button>
       </div>
 
-      {showIntro && <IntroPanel board={board} items={items} />}
+      {view === "board" && <IntroPanel board={board} items={items} onChange={onIntroChange} />}
 
       <div className="relative z-0 isolate flex-1 min-h-0 bg-paper">
         {view === "board" ? (

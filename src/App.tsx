@@ -352,6 +352,10 @@ export default function App() {
               historyStore.save({ ...board, title });
               refresh();
             }}
+            onIntroChange={(language, introduction) => {
+              historyStore.save({ ...board, introductions: { ...board.introductions, [language]: introduction } });
+              refresh();
+            }}
           />
         ) : (
           <p className="p-8">Board nicht gefunden.</p>

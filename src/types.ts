@@ -52,6 +52,12 @@ export interface Suggestion {
   distance?: number;
 }
 
+/** AI-generated introduction that is stored with the board, one per language code. */
+export interface BoardIntroduction {
+  title: string;
+  text: string;
+}
+
 export interface Board {
   id: string;
   title: string;
@@ -59,4 +65,5 @@ export interface Board {
   items: Item[];
   /** links[i] connects items[i] to items[i + 1]. */
   links: Link[];
+  introductions?: Record<string, BoardIntroduction>;
 }

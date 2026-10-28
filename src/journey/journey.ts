@@ -120,6 +120,12 @@ export function isSavable(state: JourneyState): boolean {
   return state.items.length >= 2;
 }
 
-export function defaultBoardTitle(_state: JourneyState, _date = new Date()): string {
-  return "Unbenanntes Board";
+const MAX_TITLE_LENGTH = 60;
+
+/** Default board title: the date plus the title of the first item, e.g. "28.10.2026 – Landesausstellung". */
+export function defaultBoardTitle(state: JourneyState, date = new Date()): string {
+  const first = state.items[0]?.title.trim();
+  if (!first) return "Unbenanntes Board";
+  const short = first.length > MAX_TITLE_LENGTH ? `${first.slice(0, MAX_TITLE_LENGTH).trimEnd()}…` : first;
+  return `${date.toLocaleDateString("de-AT")} – ${short}`;
 }
