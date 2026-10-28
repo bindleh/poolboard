@@ -25,3 +25,28 @@ a {
   outline: 2px solid var(--color-brand-blue);
   outline-offset: 2px;
 }
+
+/* Restrained, grayscale basemap; keep markers and controls unaffected. */
+.kulturpool-map .leaflet-tile-pane {
+  filter: grayscale(1) contrast(0.92) brightness(1.03);
+}
+
+/* Keep the map popup consistent with the application palette. */
+.kulturpool-map .leaflet-popup-content-wrapper,
+.kulturpool-map .leaflet-popup-tip {
+  background: #ffffff;
+  color: #141414;
+}
+
+.kulturpool-map .leaflet-popup-content {
+  margin: 12px;
+}
+
+.kulturpool-map .leaflet-control-zoom a {
+  color: #141414;
+  border-color: #e8e8e3;
+}
+
+.kulturpool-map .leaflet-control-attribution {
+  font-size: 10px;
+}
