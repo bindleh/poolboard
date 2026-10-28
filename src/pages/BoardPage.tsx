@@ -238,7 +238,7 @@ export function BoardPage({ board, onBack, onRename }: Props) {
   return (
     <div className="flex flex-col h-[calc(100vh-68px)]">
       <div className="flex flex-wrap items-center gap-3 p-4 border-b border-neutral-300 bg-white">
-        <Button onClick={onBack}>← History</Button>
+        <Button onClick={onBack}>← Meine Boards</Button>
 
         <input
           value={title}

@@ -34,7 +34,7 @@ export function HistoryPage({ boards, onOpen, onDelete, onImport }: Props) {
   return (
     <div className="max-w-[1920px] mx-auto p-3 md:p-4">
       <div className="flex flex-wrap items-center gap-3 mb-5">
-        <h1 className="text-2xl font-semibold mr-auto">History</h1>
+        <h1 className="text-2xl font-semibold mr-auto">Meine Boards</h1>
         <input
           ref={fileRef}
           type="file"
