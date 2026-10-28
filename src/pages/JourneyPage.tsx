@@ -139,7 +139,7 @@ function JourneyStrip({ items, onSelect }: { items: Item[]; onSelect: (item: Ite
   const shown = [indexed[0], ...tail];
 
   return (
-    <ol className="flex items-center gap-2 min-w-0" aria-label="Meine Reise">
+    <ol className="flex items-center gap-2 min-w-0" aria-label="Mein Board">
       {shown.map(({ item, index }) => (
         <li key={item.id} className="flex items-center gap-2 shrink-0">
           {hidden && index === tail[0].index && (
@@ -203,20 +203,14 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
           ) : (
             <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
           )}
-          <Button onClick={handleNew}>Neue Reise</Button>
+          <Button onClick={handleNew}>Neues Board</Button>
         </div>
         <div className="flex items-center gap-3 min-w-0">
           <JourneyStrip items={state.items} onSelect={(item) => setSelected({ item })} />
           <Button variant="dark" className="ml-auto shrink-0 whitespace-nowrap" onClick={onFinish} disabled={onlyStart}>
-            Reise fertigstellen
+            Board fertigstellen
           </Button>
-        ) : (
-          <Button onClick={undo}>Letzen Schritt zurücknehmen</Button>
-        )}
-        <Button onClick={handleNew}>Neues Board</Button>
-        <Button variant="dark" className="ml-auto" onClick={onFinish} disabled={onlyStart}>
-          Board fertigstellen
-        </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-[440px_1fr] gap-x-8 gap-y-5">
@@ -305,7 +299,7 @@ export function JourneyPage({ journey, onFinish, onNewJourney }: Props) {
       {confirmNew && (
         <ConfirmDialog
           title="Neues Board starten?"
-          text="Das aktuelle Board wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Reise beenden“ wählen."
+          text="Das aktuelle Board wird verworfen und nicht in der History gespeichert. Zum Speichern vorher „Board fertigstellen“ wählen."
           confirmLabel="Verwerfen und neu starten"
           danger
           onCancel={() => setConfirmNew(false)}
