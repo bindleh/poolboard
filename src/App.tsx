@@ -86,11 +86,11 @@ export default function App() {
           <button className="mr-4 hidden sm:block cursor-pointer" aria-label="Zum Board" onClick={() => setPage({ name: "journey" })}>
             <Logo className="h-10" />
           </button>
-          <button className={navClass(page.name === "journey") } onClick={() => setPage({ name: "journey" })}>
+          <button className={navClass(page.name === "journey")} onClick={() => setPage({ name: "journey" })}>
             Eintauchen
           </button>
           <button className={navClass(page.name !== "journey")} onClick={() => setPage({ name: "history" })}>
-            Meine Boards <span className="ml-1.5 inline-block rounded-full bg-brand-pink px-2.5 py-0.5 text-base text-ink align-middle">{boards.length}</span>
+            Meine Boards <span className="ml-1 inline-block rounded-full bg-brand-pink px-1.5 py-0.4 text-base text-ink align-middle">{boards.length}</span>
           </button>
           <form
             className="ml-auto flex gap-2"
