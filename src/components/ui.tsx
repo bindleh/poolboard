@@ -13,14 +13,7 @@ const VARIANTS: Record<Variant, string> = {
 
 /** "pool[______]board": bold wordmark with a green underline. */
 export function Logo({ className = "" }: { className?: string }) {
-  return (
-    <span
-      className={`inline-block font-extrabold tracking-tight leading-none ${className}`}
-      aria-label="poolboard"
-    >
-      pool[_______]board
-    </span>
-  );
+  return <img src="/logo.png" alt="poolboard" className={`block w-auto ${className}`} />;
 }
 
 export function Button({

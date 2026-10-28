@@ -77,14 +77,16 @@ export default function App() {
   const board = page.name === "board" ? boards.find((b) => b.id === page.id) : undefined;
 
   const navClass = (active: boolean) =>
-    `px-1 py-1 text-lg font-medium border-b-4 ${active ? "border-brand-pink text-ink" : "border-transparent text-neutral-500 hover:text-ink"}`;
+    `cursor-pointer px-1 py-1 text-lg font-medium border-b-4 ${active ? "border-brand-pink text-ink" : "border-transparent text-neutral-500 hover:text-ink"}`;
 
   return (
     <>
       <header className="bg-white border-b-4 border-brand-green">
         <nav className="max-w-7xl mx-auto px-4 md:px-6 flex items-center gap-3 h-[64px]">
-          <Logo className="text-xl mr-4 hidden sm:inline-block" />
-          <button className={navClass(page.name === "journey")} onClick={() => setPage({ name: "journey" })}>
+          <button className="mr-4 hidden sm:block cursor-pointer" aria-label="Zur Reise" onClick={() => setPage({ name: "journey" })}>
+            <Logo className="h-10" />
+          </button>
+          <button className={navClass(page.name === "journey") } onClick={() => setPage({ name: "journey" })}>
             Reise
           </button>
           <button className={navClass(page.name !== "journey")} onClick={() => setPage({ name: "history" })}>
