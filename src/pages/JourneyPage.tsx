@@ -113,7 +113,7 @@ function SuggestionGrid({
 }
 
 /** The first item plus the last STRIP_TAIL items; an ellipsis marks hidden items in between. */
-const STRIP_TAIL = 5;
+const STRIP_TAIL = 9;
 
 function JourneyStrip({ items, onSelect }: { items: Item[]; onSelect: (item: Item) => void }) {
   const indexed = items.map((item, index) => ({ item, index }));
