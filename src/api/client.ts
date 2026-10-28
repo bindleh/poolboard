@@ -27,6 +27,7 @@ export function toItem(doc: RawDoc): Item {
     dateMin: doc.dateMin,
     dateMax: doc.dateMax,
     types: doc.dcType ?? [],
+    subjects: doc.subject ?? [],
     contributors: doc.contributor ?? [],
     isPartOf: doc.isPartOf ?? [],
     medium: doc.medium ?? [],
