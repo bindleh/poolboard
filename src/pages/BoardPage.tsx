@@ -18,6 +18,7 @@ import "@xyflow/react/dist/style.css";
 import { useEffect, useMemo, useState } from "react";
 import { fetchExistingIds } from "../api/client";
 import { BoardMap } from "../components/BoardMap";
+import { IntroPanel } from "../components/IntroPanel";
 import { ItemDetail } from "../components/ItemDetail";
 import { Button, ItemImage } from "../components/ui";
 import { edgeSides, snakeSlots, type Side } from "../journey/layout";
@@ -161,6 +162,7 @@ export function BoardPage({ board, onBack, onRename }: Props) {
   const [selected, setSelected] = useState<Item | null>(null);
   const [title, setTitle] = useState(board.title);
   const [view, setView] = useState<BoardView>("board");
+  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     setItems(board.items);
@@ -289,6 +291,10 @@ export function BoardPage({ board, onBack, onRename }: Props) {
           </button>
         </div>
 
+        <Button onClick={() => setShowIntro((v) => !v)} aria-expanded={showIntro}>
+          Einleitung
+        </Button>
+
         <Button
           onClick={() =>
             downloadFile(exportFilename(), exportBoardsHtml([board]))
@@ -297,6 +303,8 @@ export function BoardPage({ board, onBack, onRename }: Props) {
           Als HTML exportieren
         </Button>
       </div>
+
+      {showIntro && <IntroPanel board={board} items={items} />}
 
       <div className="relative z-0 isolate flex-1 min-h-0 bg-paper">
         {view === "board" ? (

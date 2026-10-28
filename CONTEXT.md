@@ -38,6 +38,10 @@ _Avoid_: Moodboard, Sammlung
 Die lokal im Browser gespeicherte Liste aller **Boards** der Nutzer:in.
 _Avoid_: Verlauf, Archiv
 
+**Einleitung**:
+Ein kurzer, von einem Sprachmodell aus den Daten des **Boards** erzeugter Begleittext mit Titel; als KI-generiert gekennzeichnet und von der Nutzer:in editierbar.
+_Avoid_: Ausstellungstext, Zusammenfassung
+
 ## Relationships
 
 - Eine **Reise** endet durch "Reise fertigstellen" oder automatisch bei 20 **Objekten** und erzeugt dann ein **Board**; eine per "Neue Reise" verlassene **Reise** wird verworfen und nicht gespeichert

@@ -10,6 +10,8 @@ export interface Item {
   dateMin?: number;
   dateMax?: number;
   types: string[];
+  /** Subject keywords (Kulturpool field `subject`); basis for the common thread in the introduction. */
+  subjects?: string[];
   /** Further fields used by the metadata queries (api/metadataQueries.ts). */
   contributors?: string[];
   isPartOf?: string[];
